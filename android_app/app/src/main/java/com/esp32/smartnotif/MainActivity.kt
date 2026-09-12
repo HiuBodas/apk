@@ -128,13 +128,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
             }
         }
 
-        // Langkah 1: Buka Info Aplikasi untuk Buka Kunci Setelan Terbatas
-        binding.btnOpenAppInfo.setOnClickListener {
-            PermissionHelper.openAppDetailsSettings(this)
-            Toast.makeText(this, "Tekan titik tiga (⋮) di kanan atas -> Izinkan setelan terbatas", Toast.LENGTH_LONG).show()
-        }
-
-        // Langkah 2: Buka Pengaturan Akses Notifikasi
+        // Tombol Buka Pengaturan Akses Notifikasi
         binding.btnGrantNotifPermission.setOnClickListener {
             PermissionHelper.openNotificationAccessSettings(this)
         }
