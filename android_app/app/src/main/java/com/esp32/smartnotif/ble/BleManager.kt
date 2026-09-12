@@ -6,6 +6,7 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -61,6 +62,15 @@ class BleManager private constructor(private val context: Context) {
     private val sendQueue = ConcurrentLinkedQueue<String>()
     private var isWriting = false
 
+    private val writeTimeoutRunnable = Runnable {
+        if (isWriting) {
+            Log.w(TAG, "Write timeout! Me-reset antrean BLE...")
+            isWriting = false
+            sendQueue.poll()
+            processNextInQueue()
+        }
+    }
+
     private var autoReconnect = true
     private var lastConnectedDevice: BluetoothDevice? = null
     private var isScanning = false
@@ -96,7 +106,7 @@ class BleManager private constructor(private val context: Context) {
             return
         }
 
-        if (currentState == ConnectionState.CONNECTED) return
+        if (currentState == ConnectionState.CONNECTED || currentState == ConnectionState.CONNECTING) return
 
         // 1. Cek apakah ada ESP32 di daftar perangkat tersimpan (Bonded)
         val bondedDevices = try { adapter.bondedDevices } catch (_: Exception) { null }
@@ -212,17 +222,23 @@ class BleManager private constructor(private val context: Context) {
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.d(TAG, "Tersambung ke GATT Server ESP32. Delay 400ms sebelum discoverServices...")
-                // Delay 400ms penting untuk stabilitas GATT Android
+                Log.d(TAG, "Tersambung ke GATT Server ESP32. Menegosiasikan MTU 512...")
                 handler.postDelayed({
                     try {
-                        gatt?.discoverServices()
+                        val requested = gatt?.requestMtu(512) ?: false
+                        if (!requested) {
+                            Log.w(TAG, "requestMtu gagal dipanggil, fallback ke discoverServices...")
+                            gatt?.discoverServices()
+                        }
                     } catch (e: Exception) {
-                        Log.e(TAG, "Error discoverServices", e)
+                        Log.e(TAG, "Error requestMtu", e)
+                        gatt?.discoverServices()
                     }
-                }, 400)
+                }, 300)
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.d(TAG, "Terputus dari GATT Server (status: $status)")
+                handler.removeCallbacks(writeTimeoutRunnable)
+                isWriting = false
                 rxCharacteristic = null
                 txCharacteristic = null
                 updateState(ConnectionState.DISCONNECTED, "ESP32 Terputus")
@@ -235,6 +251,17 @@ class BleManager private constructor(private val context: Context) {
                     }, 2000)
                 }
             }
+        }
+
+        override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
+            Log.d(TAG, "MTU berhasil diubah: $mtu (status: $status). Menjalankan discoverServices...")
+            handler.postDelayed({
+                try {
+                    gatt?.discoverServices()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error discoverServices setelah onMtuChanged", e)
+                }
+            }, 200)
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
@@ -278,7 +305,6 @@ class BleManager private constructor(private val context: Context) {
                     processNextInQueue()
                 } else {
                     Log.e(TAG, "Karakteristik RX tidak ditemukan pada ESP32")
-                    // Tetap nyatakan terhubung jika GATT sudah connect
                     updateState(ConnectionState.CONNECTED, "Terhubung ke ESP32")
                 }
             }
@@ -289,11 +315,14 @@ class BleManager private constructor(private val context: Context) {
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
+            handler.removeCallbacks(writeTimeoutRunnable)
             isWriting = false
+            val sentMsg = sendQueue.poll() ?: ""
             val success = (status == BluetoothGatt.GATT_SUCCESS)
+            Log.d(TAG, "onCharacteristicWrite status: $status (success: $success), msg: $sentMsg")
             handler.post {
                 for (listener in listeners) {
-                    listener.onDataSent(characteristic?.getStringValue(0) ?: "", success)
+                    listener.onDataSent(sentMsg, success)
                 }
             }
             processNextInQueue()
@@ -315,25 +344,48 @@ class BleManager private constructor(private val context: Context) {
 
     fun sendData(message: String) {
         sendQueue.add(message)
-        processNextInQueue()
+        if (currentState != ConnectionState.CONNECTED) {
+            Log.d(TAG, "Data diantrekan, mencoba menyambungkan ulang ke ESP32...")
+            startScanAndConnect()
+        } else {
+            processNextInQueue()
+        }
     }
 
     @Synchronized
     private fun processNextInQueue() {
         if (isWriting || currentState != ConnectionState.CONNECTED) return
-        val msg = sendQueue.poll() ?: return
+        val msg = sendQueue.peek() ?: return
 
         val gatt = bluetoothGatt ?: return
         val rx = rxCharacteristic ?: return
 
-        rx.value = msg.toByteArray(Charsets.UTF_8)
-        rx.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-
+        val bytes = msg.toByteArray(Charsets.UTF_8)
         isWriting = true
-        val started = gatt.writeCharacteristic(rx)
+        handler.removeCallbacks(writeTimeoutRunnable)
+        handler.postDelayed(writeTimeoutRunnable, 1500) // Watchdog 1.5 detik
+
+        var started = false
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val writeResult = gatt.writeCharacteristic(rx, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+                started = (writeResult == BluetoothStatusCodes.SUCCESS)
+            } else {
+                rx.value = bytes
+                rx.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                started = gatt.writeCharacteristic(rx)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception saat menulis data ke characteristic", e)
+            started = false
+        }
+
         if (!started) {
-            isWriting = false
             Log.e(TAG, "Gagal mengirim data write characteristic")
+            handler.removeCallbacks(writeTimeoutRunnable)
+            isWriting = false
+            sendQueue.poll() // Hapus item gagal agar tidak memblokir antrean
+            processNextInQueue()
         }
     }
 }
