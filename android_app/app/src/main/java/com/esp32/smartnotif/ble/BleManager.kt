@@ -220,19 +220,19 @@ class BleManager private constructor(private val context: Context) {
     }
 
     private val gattCallback = object : BluetoothGattCallback() {
-        override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+        override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.d(TAG, "Tersambung ke GATT Server ESP32. Menegosiasikan MTU 512...")
                 handler.postDelayed({
                     try {
-                        val requested = gatt?.requestMtu(512) ?: false
+                        val requested = gatt.requestMtu(512)
                         if (!requested) {
                             Log.w(TAG, "requestMtu gagal dipanggil, fallback ke discoverServices...")
-                            gatt?.discoverServices()
+                            gatt.discoverServices()
                         }
                     } catch (e: Exception) {
                         Log.e(TAG, "Error requestMtu", e)
-                        gatt?.discoverServices()
+                        gatt.discoverServices()
                     }
                 }, 300)
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
@@ -253,19 +253,19 @@ class BleManager private constructor(private val context: Context) {
             }
         }
 
-        override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
+        override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
             Log.d(TAG, "MTU berhasil diubah: $mtu (status: $status). Menjalankan discoverServices...")
             handler.postDelayed({
                 try {
-                    gatt?.discoverServices()
+                    gatt.discoverServices()
                 } catch (e: Exception) {
                     Log.e(TAG, "Error discoverServices setelah onMtuChanged", e)
                 }
             }, 200)
         }
 
-        override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-            if (status == BluetoothGatt.GATT_SUCCESS && gatt != null) {
+        override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.d(TAG, "Layanan ditemukan! Mencari karakteristik RX & TX...")
                 var foundRx: BluetoothGattCharacteristic? = null
                 var foundTx: BluetoothGattCharacteristic? = null
@@ -292,7 +292,9 @@ class BleManager private constructor(private val context: Context) {
                             gatt.setCharacteristicNotification(tx, true)
                             val descriptor = tx.getDescriptor(BleConstants.CCCD_UUID)
                             descriptor?.let { desc ->
+                                @Suppress("DEPRECATION")
                                 desc.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                                @Suppress("DEPRECATION")
                                 gatt.writeDescriptor(desc)
                             }
                         } catch (e: Exception) {
@@ -311,8 +313,8 @@ class BleManager private constructor(private val context: Context) {
         }
 
         override fun onCharacteristicWrite(
-            gatt: BluetoothGatt?,
-            characteristic: BluetoothGattCharacteristic?,
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
             status: Int
         ) {
             handler.removeCallbacks(writeTimeoutRunnable)
@@ -330,13 +332,27 @@ class BleManager private constructor(private val context: Context) {
 
         @Deprecated("Deprecated in Java")
         override fun onCharacteristicChanged(
-            gatt: BluetoothGatt?,
-            characteristic: BluetoothGattCharacteristic?
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic
         ) {
-            val value = characteristic?.getStringValue(0) ?: return
+            @Suppress("DEPRECATION")
+            val value = characteristic.getStringValue(0) ?: return
             handler.post {
                 for (listener in listeners) {
                     listener.onDataReceived(value)
+                }
+            }
+        }
+
+        override fun onCharacteristicChanged(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            value: ByteArray
+        ) {
+            val str = String(value, Charsets.UTF_8)
+            handler.post {
+                for (listener in listeners) {
+                    listener.onDataReceived(str)
                 }
             }
         }
@@ -369,10 +385,13 @@ class BleManager private constructor(private val context: Context) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 val writeResult = gatt.writeCharacteristic(rx, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
-                started = (writeResult == BluetoothStatusCodes.SUCCESS)
+                started = (writeResult == 0)
             } else {
+                @Suppress("DEPRECATION")
                 rx.value = bytes
+                @Suppress("DEPRECATION")
                 rx.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                @Suppress("DEPRECATION")
                 started = gatt.writeCharacteristic(rx)
             }
         } catch (e: Exception) {
