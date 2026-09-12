@@ -13,7 +13,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Header -->
+        <!-- Header Aplikasi -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -31,52 +31,13 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Koneksi Real-time Notifikasi ke Layar OLED ESP32-C3"
+                android:text="Penerus Otomatis Pesan Masuk ke OLED ESP32-C3"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:layout_marginTop="2dp" />
         </LinearLayout>
 
-        <!-- Banner Peringatan Izin Notifikasi (Jika belum aktif) -->
-        <LinearLayout
-            android:id="@+id/layoutPermissionWarning"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/bg_card"
-            android:padding="14dp"
-            android:layout_marginBottom="14dp"
-            android:visibility="gone"
-            tools:visibility="visible">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="⚠️ Akses Notifikasi Belum Aktif"
-                android:textColor="#F59E0B"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/permission_notif_access_msg"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:layout_marginTop="4dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnGrantNotifPermission"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="@string/btn_open_settings"
-                android:textSize="12sp"
-                app:cornerRadius="8dp"
-                app:backgroundTint="@color/primary" />
-        </LinearLayout>
-
-        <!-- KARTU STATUS KONEKSI BLE -->
+        <!-- KARTU STATUS KONEKSI ESP32 (OTOMATIS & TERPISAH) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -85,57 +46,139 @@
             android:padding="16dp"
             android:layout_marginBottom="14dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/title_ble_status"
-                android:textColor="@color/text_muted"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/title_ble_status"
+                    android:textColor="@color/text_muted"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/btnRefreshScan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/btn_reconnect"
+                    android:textColor="@color/primary"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:padding="4dp" />
+            </LinearLayout>
+
+            <!-- Indikator Status -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="10dp">
 
                 <View
                     android:id="@+id/viewStatusDot"
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
                     android:background="@drawable/bg_badge"
-                    android:backgroundTint="@color/status_disconnected" />
+                    android:backgroundTint="@color/status_connecting" />
 
-                <TextView
-                    android:id="@+id/tvBleStatus"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:text="@string/status_disconnected"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:orientation="vertical"
+                    android:layout_marginStart="10dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnBleAction"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/btn_connect"
-                    android:textSize="12sp"
-                    app:cornerRadius="8dp"
-                    app:backgroundTint="@color/primary" />
+                    <TextView
+                        android:id="@+id/tvBleStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_connecting"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvBleDetail"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Perangkat Target: ESP32-SmartNotif (Auto-Sync)"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
             </LinearLayout>
+        </LinearLayout>
+
+        <!-- PANDUAN BUKA KUNCI SETELAN TERBATAS (ANDROID 13/14+) -->
+        <LinearLayout
+            android:id="@+id/layoutPermissionWarning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:padding="16dp"
+            android:layout_marginBottom="14dp"
+            android:visibility="gone"
+            tools:visibility="visible">
 
             <TextView
-                android:id="@+id/tvDeviceTarget"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Perangkat: ESP32-SmartNotif"
+                android:text="@string/permission_notif_access_title"
+                android:textColor="#F59E0B"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Jika muncul dialog 'Setelan Terbatas' saat mengaktifkan izin, ikuti 2 langkah mudah berikut:"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp"
+                android:layout_marginTop="6dp" />
+
+            <!-- Langkah 1 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/permission_notif_step1"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp"
-                android:layout_marginTop="4dp" />
+                android:layout_marginTop="6dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnOpenAppInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/btn_open_app_info"
+                android:textSize="12sp"
+                app:cornerRadius="8dp"
+                app:backgroundTint="#D97706" />
+
+            <!-- Langkah 2 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/permission_notif_step2"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:layout_marginTop="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGrantNotifPermission"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/btn_open_notif_settings"
+                android:textSize="12sp"
+                app:cornerRadius="8dp"
+                app:backgroundTint="@color/primary" />
         </LinearLayout>
 
         <!-- KARTU FILTER APLIKASI -->

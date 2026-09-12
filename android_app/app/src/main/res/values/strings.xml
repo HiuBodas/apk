@@ -2,16 +2,14 @@
     <string name="app_name">ESP32 Smart Notif</string>
     <string name="notif_service_name">Layanan Notifikasi ESP32</string>
 
-    <string name="title_ble_status">Status Bluetooth ESP32</string>
+    <string name="title_ble_status">Koneksi Bluetooth ESP32</string>
     <string name="device_target_name">ESP32-SmartNotif</string>
-    <string name="btn_connect">Hubungkan</string>
-    <string name="btn_disconnect">Putuskan</string>
-    <string name="btn_scan">Cari Perangkat</string>
+    <string name="btn_reconnect">Pindai Ulang</string>
 
-    <string name="status_connected">TERHUBUNG</string>
-    <string name="status_disconnected">TERPUTUS</string>
-    <string name="status_scanning">MEMINDAI ESP32...</string>
-    <string name="status_connecting">MENGHUBUNGKAN...</string>
+    <string name="status_connected">TERHUBUNG OTOMATIS</string>
+    <string name="status_disconnected">ESP32 STANDBY / TERPUTUS</string>
+    <string name="status_scanning">SEDANG MENCARI ESP32...</string>
+    <string name="status_connecting">MENYAMBUNGKAN KE ESP32...</string>
 
     <string name="title_app_filter">Aplikasi yang Diteruskan</string>
     <string name="filter_wa">WhatsApp</string>
@@ -30,8 +28,9 @@
 
     <string name="permission_title">Izin Diperlukan</string>
     <string name="permission_ble_msg">Aplikasi membutuhkan izin Bluetooth dan Lokasi untuk mendeteksi ESP32-SmartNotif.</string>
-    <string name="permission_notif_access_title">Aktivasi Akses Notifikasi</string>
-    <string name="permission_notif_access_msg">Agar aplikasi bisa otomatis membaca pesan WhatsApp/SMS dan mengirimkannya ke ESP32, harap aktifkan izin Akses Notifikasi untuk aplikasi ini di menu Pengaturan.</string>
-    <string name="btn_open_settings">Buka Pengaturan</string>
-    <string name="btn_ok">OK</string>
+    <string name="permission_notif_access_title">⚠️ Buka Kunci Izin (Android 13/14+)</string>
+    <string name="permission_notif_step1">Langkah 1: Tekan tombol [1. Buka Info Aplikasi], lalu tekan titik tiga (⋮) di kanan atas dan pilih \"Izinkan setelan terbatas\".</string>
+    <string name="permission_notif_step2">Langkah 2: Tekan tombol [2. Aktifkan Akses Notifikasi] di bawah dan nyalakan saklar ESP32 Smart Notif.</string>
+    <string name="btn_open_app_info">1. Buka Info Aplikasi (Buka Kunci ⋮)</string>
+    <string name="btn_open_notif_settings">2. Aktifkan Akses Notifikasi</string>
 </resources>

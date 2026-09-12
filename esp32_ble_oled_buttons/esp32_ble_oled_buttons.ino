@@ -75,8 +75,7 @@ int selectedNotif = 0;
 // --- STATE NAVIGASI ---
 enum ScreenState {
   STATE_MENU,
-  STATE_ANDROID,
-  STATE_IPHONE,
+  STATE_DEVICE_STATUS,
   STATE_NOTIF_LIST,
   STATE_NOTIF_DETAIL,
   STATE_POPUP
@@ -87,9 +86,9 @@ ScreenState lastState = STATE_MENU;
 
 const int MENU_TOTAL = 3;
 const char* menuItems[MENU_TOTAL] = {
-  "1. Hubungkan Android",
-  "2. Hubungkan iPhone",
-  "3. Riwayat Pesan"
+  "1. Status Perangkat",
+  "2. Riwayat Pesan",
+  "3. Hapus Pesan"
 };
 int currentMenuIdx = 0;
 
@@ -105,8 +104,7 @@ const unsigned long POPUP_TIMEOUT = 10000;
 // Forward Declarations
 void drawUI();
 void drawMenu();
-void drawAndroidScreen();
-void drawiPhoneScreen();
+void drawDeviceStatus();
 void drawNotifList();
 void drawNotifDetail();
 void drawPopup();
@@ -315,14 +313,28 @@ void loop() {
       lastBtn2Time = millis();
 
       if (currentState == STATE_MENU) {
-        if (currentMenuIdx == 0) currentState = STATE_ANDROID;
-        else if (currentMenuIdx == 1) currentState = STATE_IPHONE;
-        else if (currentMenuIdx == 2) {
+        if (currentMenuIdx == 0) {
+          currentState = STATE_DEVICE_STATUS;
+        }
+        else if (currentMenuIdx == 1) {
           currentState = STATE_NOTIF_LIST;
           selectedNotif = 0;
         }
+        else if (currentMenuIdx == 2) {
+          // Hapus semua pesan
+          notifCount = 0;
+          selectedNotif = 0;
+          display.clearDisplay();
+          drawHeader("BERSIHKAN PESAN");
+          display.setTextSize(1);
+          display.setTextColor(SSD1306_WHITE);
+          display.setCursor(10, 28);
+          display.print(F("Semua pesan terhapus"));
+          display.display();
+          delay(1000);
+        }
       }
-      else if (currentState == STATE_ANDROID || currentState == STATE_IPHONE) {
+      else if (currentState == STATE_DEVICE_STATUS) {
         currentState = STATE_MENU; // Kembali ke menu utama
       }
       else if (currentState == STATE_NOTIF_LIST) {
@@ -351,11 +363,11 @@ void drawHeader(const char* title) {
   display.setCursor(0, 0);
   display.print(title);
 
-  display.setCursor(80, 0);
+  display.setCursor(76, 0);
   if (deviceConnected) {
-    display.print(F("[BLE:ON]"));
+    display.print(F("[ONLINE]"));
   } else {
-    display.print(F("[BLE:--]"));
+    display.print(F("[STANDBY]"));
   }
   display.drawLine(0, 9, 127, 9, SSD1306_WHITE);
 }
@@ -375,11 +387,8 @@ void drawUI() {
     case STATE_MENU:
       drawMenu();
       break;
-    case STATE_ANDROID:
-      drawAndroidScreen();
-      break;
-    case STATE_IPHONE:
-      drawiPhoneScreen();
+    case STATE_DEVICE_STATUS:
+      drawDeviceStatus();
       break;
     case STATE_NOTIF_LIST:
       drawNotifList();
@@ -414,54 +423,33 @@ void drawMenu() {
   drawFooter("[B1]Geser  [B2]Pilih");
 }
 
-// 2. LAYAR SAMBUNGKAN ANDROID
-void drawAndroidScreen() {
-  drawHeader("KONEKSI ANDROID");
+// 2. LAYAR STATUS PERANGKAT
+void drawDeviceStatus() {
+  drawHeader("STATUS PERANGKAT");
 
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
 
   display.setCursor(0, 13);
-  display.print(F("1. Buka Bluetooth HP"));
+  display.print(F("BLE: "));
+  display.print(BLE_DEVICE_NAME);
 
   display.setCursor(0, 23);
-  display.print(F("2. Cari: "));
-  display.print(BLE_DEVICE_NAME);
+  display.print(F("Status : "));
+  display.print(deviceConnected ? "TERHUBUNG (HP)" : "STANDBY (AUTO)");
 
   display.setCursor(0, 33);
-  display.print(F("3. Status: "));
-  display.print(deviceConnected ? "TERHUBUNG" : "MENUNGGU HP");
+  display.print(F("Riwayat: "));
+  display.print(notifCount);
+  display.print(F(" Pesan"));
 
   display.setCursor(0, 43);
-  display.print(F("4. App: MacroDroid/BLE"));
+  display.print(F("Notif  : Otomatis Masuk"));
 
   drawFooter("[B2] Kembali ke Menu");
 }
 
-// 3. LAYAR SAMBUNGKAN IPHONE
-void drawiPhoneScreen() {
-  drawHeader("KONEKSI IPHONE");
-
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-
-  display.setCursor(0, 13);
-  display.print(F("1. App: nRF Connect /"));
-  display.setCursor(18, 23);
-  display.print(F("LightBlue"));
-
-  display.setCursor(0, 33);
-  display.print(F("2. Cari: "));
-  display.print(BLE_DEVICE_NAME);
-
-  display.setCursor(0, 43);
-  display.print(F("3. Status: "));
-  display.print(deviceConnected ? "TERHUBUNG" : "MENUNGGU HP");
-
-  drawFooter("[B2] Kembali ke Menu");
-}
-
-// 4. DAFTAR RIWAYAT NOTIFIKASI
+// 3. DAFTAR RIWAYAT NOTIFIKASI
 void drawNotifList() {
   drawHeader("RIWAYAT PESAN");
 

@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
             Toast.makeText(this, "Izin Bluetooth diberikan", Toast.LENGTH_SHORT).show()
             bleManager.startScanAndConnect()
         } else {
-            Toast.makeText(this, "Izin diperlukan untuk memindai ESP32", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Izin diperlukan untuk menghubungkan ke ESP32", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -81,6 +81,12 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
         bleManager.addListener(this)
         checkNotificationAccess()
 
+        // Otomatis hubungkan jika sedang terputus
+        if (bleManager.currentState == BleManager.ConnectionState.DISCONNECTED &&
+            PermissionHelper.hasAllRuntimePermissions(this)) {
+            bleManager.startScanAndConnect()
+        }
+
         val filter = IntentFilter(NotificationReceiverService.ACTION_NEW_NOTIF_LOG)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(logBroadcastReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
@@ -111,22 +117,24 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
     }
 
     private fun setupListeners() {
-        // Tombol Hubungkan / Putuskan BLE
-        binding.btnBleAction.setOnClickListener {
-            if (bleManager.currentState == BleManager.ConnectionState.CONNECTED ||
-                bleManager.currentState == BleManager.ConnectionState.CONNECTING ||
-                bleManager.currentState == BleManager.ConnectionState.SCANNING) {
+        // Tombol Pindai Ulang BLE
+        binding.btnRefreshScan.setOnClickListener {
+            if (PermissionHelper.hasAllRuntimePermissions(this)) {
                 bleManager.disconnect()
+                bleManager.startScanAndConnect()
+                Toast.makeText(this, "Memindai ulang ESP32-SmartNotif...", Toast.LENGTH_SHORT).show()
             } else {
-                if (PermissionHelper.hasAllRuntimePermissions(this)) {
-                    bleManager.startScanAndConnect()
-                } else {
-                    requestPermissionLauncher.launch(PermissionHelper.getRequiredPermissions())
-                }
+                requestPermissionLauncher.launch(PermissionHelper.getRequiredPermissions())
             }
         }
 
-        // Tombol Izin Akses Notifikasi
+        // Langkah 1: Buka Info Aplikasi untuk Buka Kunci Setelan Terbatas
+        binding.btnOpenAppInfo.setOnClickListener {
+            PermissionHelper.openAppDetailsSettings(this)
+            Toast.makeText(this, "Tekan titik tiga (⋮) di kanan atas -> Izinkan setelan terbatas", Toast.LENGTH_LONG).show()
+        }
+
+        // Langkah 2: Buka Pengaturan Akses Notifikasi
         binding.btnGrantNotifPermission.setOnClickListener {
             PermissionHelper.openNotificationAccessSettings(this)
         }
@@ -162,7 +170,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
             val timeStr = timeFormat.format(Date())
             addLogItem(NotifLogItem("WA", sender, msg, timeStr))
 
-            Toast.makeText(this, "Pesan tes dikirim ke ESP32", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Pesan dikirim ke ESP32", Toast.LENGTH_SHORT).show()
         }
 
         // Hapus Log
@@ -176,7 +184,6 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
         if (!PermissionHelper.hasAllRuntimePermissions(this)) {
             requestPermissionLauncher.launch(PermissionHelper.getRequiredPermissions())
         } else {
-            // Langsung scan jika izin sudah ada
             bleManager.startScanAndConnect()
         }
     }
@@ -203,35 +210,27 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
             when (state) {
                 BleManager.ConnectionState.CONNECTED -> {
                     binding.tvBleStatus.text = getString(R.string.status_connected)
+                    binding.tvBleDetail.text = "ESP32-SmartNotif Aktif - Siap Menerima Chat"
                     binding.viewStatusDot.backgroundTintList =
                         ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_connected))
-                    binding.btnBleAction.text = getString(R.string.btn_disconnect)
-                    binding.btnBleAction.backgroundTintList =
-                        ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_disconnected))
                 }
                 BleManager.ConnectionState.CONNECTING -> {
                     binding.tvBleStatus.text = getString(R.string.status_connecting)
+                    binding.tvBleDetail.text = "Menghubungkan ke ESP32-SmartNotif..."
                     binding.viewStatusDot.backgroundTintList =
                         ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_connecting))
-                    binding.btnBleAction.text = "Batal"
-                    binding.btnBleAction.backgroundTintList =
-                        ColorStateList.valueOf(ContextCompat.getColor(this, R.color.card_stroke))
                 }
                 BleManager.ConnectionState.SCANNING -> {
                     binding.tvBleStatus.text = getString(R.string.status_scanning)
+                    binding.tvBleDetail.text = "Mencari perangkat ESP32-SmartNotif di sekitar..."
                     binding.viewStatusDot.backgroundTintList =
                         ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_connecting))
-                    binding.btnBleAction.text = "Batal"
-                    binding.btnBleAction.backgroundTintList =
-                        ColorStateList.valueOf(ContextCompat.getColor(this, R.color.card_stroke))
                 }
                 BleManager.ConnectionState.DISCONNECTED -> {
                     binding.tvBleStatus.text = getString(R.string.status_disconnected)
+                    binding.tvBleDetail.text = "ESP32 tidak terdeteksi (Nyalakan saklar power ESP32)"
                     binding.viewStatusDot.backgroundTintList =
                         ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_disconnected))
-                    binding.btnBleAction.text = getString(R.string.btn_connect)
-                    binding.btnBleAction.backgroundTintList =
-                        ColorStateList.valueOf(ContextCompat.getColor(this, R.color.primary))
                 }
             }
         }
@@ -240,13 +239,12 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
     override fun onDataReceived(data: String) {
         runOnUiThread {
             if (data == "ACK_OK") {
-                // Konfirmasi dari ESP32 bahwa notifikasi berhasil diterima & ditampilkan
-                Toast.makeText(this, "ESP32: Pesan ditampilkan!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "ESP32: Pesan berhasil ditampilkan di OLED!", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     override fun onDataSent(data: String, success: Boolean) {
-        // Data berhasil terkirim ke GATT characteristic
+        // Data berhasil terkirim ke characteristic BLE
     }
 }

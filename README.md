@@ -32,13 +32,13 @@ Proyek ini mencakup firmware **ESP32-C3 SuperMini** untuk penerima notifikasi Bl
 
 ### 📋 A. Di Menu Utama:
 - **Tekan Tombol B1 (GPIO 4)**: Menggeser kursor ke menu berikutnya:
-  1. `1. Hubungkan Android`
-  2. `2. Hubungkan iPhone`
-  3. `3. Riwayat Pesan`
+  1. `1. Status Perangkat` (Melihat status ONLINE/STANDBY & info BLE)
+  2. `2. Riwayat Pesan` (Melihat daftar pesan chat masuk)
+  3. `3. Hapus Pesan` (Mengosongkan semua riwayat pesan tersimpan)
 - **Tekan Tombol B2 (GPIO 3)**: Membuka (*Enter/Pilih*) menu yang dipilih.
 
-### 📱 B. Di Layar Hubungkan Android / iPhone:
-- Menampilkan nama Bluetooth (`ESP32-SmartNotif`) dan status koneksi (`TERHUBUNG` / `MENUNGGU HP`).
+### 📱 B. Di Layar Status Perangkat:
+- Menampilkan nama Bluetooth (`ESP32-SmartNotif`), status koneksi (`TERHUBUNG (HP)` / `STANDBY (AUTO)`), dan total pesan.
 - **Tekan Tombol B2 (GPIO 3)**: Kembali ke Menu Utama.
 
 ### 📩 C. Di Layar Riwayat Pesan:
