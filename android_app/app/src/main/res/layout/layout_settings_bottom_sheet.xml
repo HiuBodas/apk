@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:padding="20dp">
+
+    <!-- Drag Handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@color/card_stroke"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Header Menu -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pengaturan &amp; Izin Sistem"
+        android:textColor="@color/text_primary"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Kelola izin keamanan, filter notifikasi, dan Bluetooth"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- SEKSI 1: IZIN & KEAMANAN SISTEM -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔐 IZIN &amp; KEAMANAN ANDROID"
+        android:textColor="@color/text_muted"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Tombol Khusus Buka Info Aplikasi untuk Titik Tiga -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnMenuAppInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Buka Info Aplikasi (Buka Kunci Titik Tiga ⋮)"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        app:cornerRadius="8dp"
+        app:backgroundTint="#D97706"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Tombol Akses Notifikasi -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnMenuNotifAccess"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Pengaturan Akses Notifikasi"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        app:cornerRadius="8dp"
+        app:backgroundTint="@color/primary"
+        android:layout_marginBottom="16dp" />
+
+    <!-- SEKSI 2: FILTER APLIKASI -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔔 FILTER APLIKASI YANG DITERUSKAN"
+        android:textColor="@color/text_muted"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/sheetSwitchWA"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/filter_wa"
+            android:textColor="@color/text_primary"
+            android:checked="true" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/sheetSwitchTelegram"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/filter_telegram"
+            android:textColor="@color/text_primary"
+            android:checked="true" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="16dp">
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/sheetSwitchSMS"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/filter_sms"
+            android:textColor="@color/text_primary"
+            android:checked="true" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/sheetSwitchIG"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/filter_ig"
+            android:textColor="@color/text_primary"
+            android:checked="true" />
+    </LinearLayout>
+
+    <!-- SEKSI 3: KONEKSI BLUETOOTH -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="📡 BLUETOOTH ESP32"
+        android:textColor="@color/text_muted"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnMenuRescanBle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Pindai Ulang Bluetooth ESP32"
+        android:textSize="13sp"
+        app:cornerRadius="8dp"
+        app:backgroundTint="@color/card_stroke"
+        android:textColor="@color/text_primary" />
+
+</LinearLayout>

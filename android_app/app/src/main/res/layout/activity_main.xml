@@ -13,31 +13,49 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Header Aplikasi -->
+        <!-- Top Bar Header dengan Tombol Hamburger (☰) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:layout_marginBottom="16dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/app_name"
-                android:textColor="@color/text_primary"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Penerus Otomatis Pesan Masuk ke OLED ESP32-C3"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:layout_marginTop="2dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/app_name"
+                    android:textColor="@color/text_primary"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Penerus Otomatis Chat ke OLED ESP32"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <!-- Ikon Hamburger Menu (☰) untuk Pengaturan & Titik Tiga -->
+            <ImageButton
+                android:id="@+id/btnHamburger"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_card"
+                android:src="@drawable/ic_menu"
+                android:contentDescription="Menu Pengaturan"
+                app:tint="@color/text_primary" />
         </LinearLayout>
 
-        <!-- KARTU STATUS KONEKSI ESP32 (OTOMATIS & TERPISAH) -->
+        <!-- KARTU STATUS KONEKSI ESP32 (OTOMATIS & REAL-TIME) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -46,33 +64,14 @@
             android:padding="16dp"
             android:layout_marginBottom="14dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:text="@string/title_ble_status"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/title_ble_status"
-                    android:textColor="@color/text_muted"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/btnRefreshScan"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/btn_reconnect"
-                    android:textColor="@color/primary"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:padding="4dp" />
-            </LinearLayout>
-
-            <!-- Indikator Status -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -106,7 +105,7 @@
                         android:id="@+id/tvBleDetail"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Perangkat Target: ESP32-SmartNotif (Auto-Sync)"
+                        android:text="Perangkat: ESP32-SmartNotif (Auto-Sync)"
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:layout_marginTop="2dp" />
@@ -114,14 +113,14 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- PANDUAN AKTIVASI AKSES NOTIFIKASI -->
+        <!-- Peringatan Singkat jika Akses Notifikasi Belum Aktif -->
         <LinearLayout
             android:id="@+id/layoutPermissionWarning"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@drawable/bg_card"
-            android:padding="16dp"
+            android:padding="14dp"
             android:layout_marginBottom="14dp"
             android:visibility="gone"
             tools:visibility="visible">
@@ -129,96 +128,28 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⚠️ Akses Notifikasi Belum Aktif"
+                android:text="⚠️ Akses Notifikasi Belum Diizinkan"
                 android:textColor="#F59E0B"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Agar pesan WhatsApp &amp; SMS otomatis dikirim ke OLED ESP32, silakan aktifkan izin notifikasi."
+                android:text="Buka menu Pengaturan (☰) untuk mengaktifkan izin notifikasi atau membuka kunci titik tiga."
                 android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:layout_marginTop="4dp" />
+                android:textSize="11sp"
+                android:layout_marginTop="2dp" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnGrantNotifPermission"
+                android:id="@+id/btnQuickGrantNotif"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="Aktifkan Akses Notifikasi (ON)"
-                android:textSize="13sp"
+                android:layout_marginTop="8dp"
+                android:text="Aktifkan Akses Notifikasi"
+                android:textSize="12sp"
                 app:cornerRadius="8dp"
                 app:backgroundTint="@color/primary" />
-        </LinearLayout>
-
-        <!-- KARTU FILTER APLIKASI -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/bg_card"
-            android:padding="16dp"
-            android:layout_marginBottom="14dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/title_app_filter"
-                android:textColor="@color/text_muted"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switchWA"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/filter_wa"
-                    android:textColor="@color/text_primary"
-                    android:checked="true" />
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switchTelegram"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/filter_telegram"
-                    android:textColor="@color/text_primary"
-                    android:checked="true" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="4dp">
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switchSMS"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/filter_sms"
-                    android:textColor="@color/text_primary"
-                    android:checked="true" />
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switchIG"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/filter_ig"
-                    android:textColor="@color/text_primary"
-                    android:checked="true" />
-            </LinearLayout>
         </LinearLayout>
 
         <!-- KARTU TES KIRIM PESAN MANUAL -->

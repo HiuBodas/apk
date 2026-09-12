@@ -15,12 +15,14 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.esp32.smartnotif.ble.BleManager
 import com.esp32.smartnotif.databinding.ActivityMainBinding
+import com.esp32.smartnotif.databinding.LayoutSettingsBottomSheetBinding
 import com.esp32.smartnotif.model.NotifLogItem
 import com.esp32.smartnotif.service.BleForegroundService
 import com.esp32.smartnotif.service.NotificationReceiverService
 import com.esp32.smartnotif.ui.LogAdapter
 import com.esp32.smartnotif.utils.AppFilterManager
 import com.esp32.smartnotif.utils.PermissionHelper
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -38,7 +40,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
     ) { permissions ->
         val allGranted = permissions.entries.all { it.value }
         if (allGranted) {
-            Toast.makeText(this, "Izin Bluetooth diberikan", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Izin Bluetooth aktif", Toast.LENGTH_SHORT).show()
             bleManager.startScanAndConnect()
         } else {
             Toast.makeText(this, "Izin diperlukan untuk menghubungkan ke ESP32", Toast.LENGTH_LONG).show()
@@ -108,43 +110,17 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
         binding.rvNotifLogs.layoutManager = LinearLayoutManager(this)
         binding.rvNotifLogs.adapter = logAdapter
         updateEmptyLogsView()
-
-        // Setup Filter Switches sesuai preferensi tersimpan
-        binding.switchWA.isChecked = appFilterManager.isWhatsAppEnabled
-        binding.switchTelegram.isChecked = appFilterManager.isTelegramEnabled
-        binding.switchSMS.isChecked = appFilterManager.isSmsEnabled
-        binding.switchIG.isChecked = appFilterManager.isInstagramEnabled
     }
 
     private fun setupListeners() {
-        // Tombol Pindai Ulang BLE
-        binding.btnRefreshScan.setOnClickListener {
-            if (PermissionHelper.hasAllRuntimePermissions(this)) {
-                bleManager.disconnect()
-                bleManager.startScanAndConnect()
-                Toast.makeText(this, "Memindai ulang ESP32-SmartNotif...", Toast.LENGTH_SHORT).show()
-            } else {
-                requestPermissionLauncher.launch(PermissionHelper.getRequiredPermissions())
-            }
+        // Tombol Hamburger Menu (☰) untuk membuka BottomSheet Pengaturan & Titik Tiga
+        binding.btnHamburger.setOnClickListener {
+            showSettingsBottomSheet()
         }
 
-        // Tombol Buka Pengaturan Akses Notifikasi
-        binding.btnGrantNotifPermission.setOnClickListener {
+        // Tombol cepat jika banner akses notifikasi muncul
+        binding.btnQuickGrantNotif.setOnClickListener {
             PermissionHelper.openNotificationAccessSettings(this)
-        }
-
-        // Switch filter listener
-        binding.switchWA.setOnCheckedChangeListener { _, isChecked ->
-            appFilterManager.isWhatsAppEnabled = isChecked
-        }
-        binding.switchTelegram.setOnCheckedChangeListener { _, isChecked ->
-            appFilterManager.isTelegramEnabled = isChecked
-        }
-        binding.switchSMS.setOnCheckedChangeListener { _, isChecked ->
-            appFilterManager.isSmsEnabled = isChecked
-        }
-        binding.switchIG.setOnCheckedChangeListener { _, isChecked ->
-            appFilterManager.isInstagramEnabled = isChecked
         }
 
         // Tombol Kirim Tes Notifikasi
@@ -172,6 +148,60 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
             logAdapter.clear()
             updateEmptyLogsView()
         }
+    }
+
+    // Modal BottomSheet Pengaturan Lengkap (Hamburger Menu)
+    private fun showSettingsBottomSheet() {
+        val dialog = BottomSheetDialog(this)
+        val sheetBinding = LayoutSettingsBottomSheetBinding.inflate(layoutInflater)
+        dialog.setContentView(sheetBinding.root)
+
+        // Setup Nilai Filter saat ini
+        sheetBinding.sheetSwitchWA.isChecked = appFilterManager.isWhatsAppEnabled
+        sheetBinding.sheetSwitchTelegram.isChecked = appFilterManager.isTelegramEnabled
+        sheetBinding.sheetSwitchSMS.isChecked = appFilterManager.isSmsEnabled
+        sheetBinding.sheetSwitchIG.isChecked = appFilterManager.isInstagramEnabled
+
+        // 1. Tombol Buka Info Aplikasi (Akses Titik Tiga ⋮)
+        sheetBinding.btnMenuAppInfo.setOnClickListener {
+            PermissionHelper.openAppDetailsSettings(this)
+            Toast.makeText(this, "Tekan titik tiga (⋮) di kanan atas -> Izinkan setelan terbatas", Toast.LENGTH_LONG).show()
+            dialog.dismiss()
+        }
+
+        // 2. Tombol Akses Notifikasi
+        sheetBinding.btnMenuNotifAccess.setOnClickListener {
+            PermissionHelper.openNotificationAccessSettings(this)
+            dialog.dismiss()
+        }
+
+        // 3. Filter Switches
+        sheetBinding.sheetSwitchWA.setOnCheckedChangeListener { _, isChecked ->
+            appFilterManager.isWhatsAppEnabled = isChecked
+        }
+        sheetBinding.sheetSwitchTelegram.setOnCheckedChangeListener { _, isChecked ->
+            appFilterManager.isTelegramEnabled = isChecked
+        }
+        sheetBinding.sheetSwitchSMS.setOnCheckedChangeListener { _, isChecked ->
+            appFilterManager.isSmsEnabled = isChecked
+        }
+        sheetBinding.sheetSwitchIG.setOnCheckedChangeListener { _, isChecked ->
+            appFilterManager.isInstagramEnabled = isChecked
+        }
+
+        // 4. Pindai Ulang Bluetooth
+        sheetBinding.btnMenuRescanBle.setOnClickListener {
+            if (PermissionHelper.hasAllRuntimePermissions(this)) {
+                bleManager.disconnect()
+                bleManager.startScanAndConnect()
+                Toast.makeText(this, "Memindai ulang ESP32...", Toast.LENGTH_SHORT).show()
+            } else {
+                requestPermissionLauncher.launch(PermissionHelper.getRequiredPermissions())
+            }
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun checkAndRequestPermissions() {
@@ -233,12 +263,10 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
     override fun onDataReceived(data: String) {
         runOnUiThread {
             if (data == "ACK_OK") {
-                Toast.makeText(this, "ESP32: Pesan berhasil ditampilkan di OLED!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "ESP32: Pesan ditampilkan di OLED!", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    override fun onDataSent(data: String, success: Boolean) {
-        // Data berhasil terkirim ke characteristic BLE
-    }
+    override fun onDataSent(data: String, success: Boolean) {}
 }
