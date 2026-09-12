@@ -228,9 +228,8 @@ void setup() {
   BLEDevice::init(BLE_DEVICE_NAME);
 
   BLESecurity *pSecurity = new BLESecurity();
-  pSecurity->setAuthenticationMode(ESP_LE_AUTH_REQ_SC_BOND);
+  pSecurity->setAuthenticationMode(ESP_LE_AUTH_BOND);
   pSecurity->setCapability(ESP_IO_CAP_NONE);
-  pSecurity->setInitEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
 
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new ServerCallbacks());
@@ -239,13 +238,13 @@ void setup() {
 
   pTxCharacteristic = pService->createCharacteristic(
                         CHARACTERISTIC_UUID_TX,
-                        BLECharacteristic::PROPERTY_NOTIFY
+                        BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_READ
                       );
   pTxCharacteristic->addDescriptor(new BLE2902());
 
   BLECharacteristic *pRxCharacteristic = pService->createCharacteristic(
                                            CHARACTERISTIC_UUID_RX,
-                                           BLECharacteristic::PROPERTY_WRITE
+                                           BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR
                                          );
   pRxCharacteristic->setCallbacks(new ReceiveCallbacks());
 

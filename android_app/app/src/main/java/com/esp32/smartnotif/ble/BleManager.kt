@@ -63,6 +63,7 @@ class BleManager private constructor(private val context: Context) {
 
     private var autoReconnect = true
     private var lastConnectedDevice: BluetoothDevice? = null
+    private var isScanning = false
 
     fun addListener(listener: BleStateListener) {
         if (!listeners.contains(listener)) {
@@ -97,14 +98,14 @@ class BleManager private constructor(private val context: Context) {
 
         if (currentState == ConnectionState.CONNECTED) return
 
-        // 1. Prioritas Utama: Cek apakah ESP32 sudah terpasang/tersimpan di sistem Bluetooth HP
+        // 1. Cek apakah ada ESP32 di daftar perangkat tersimpan (Bonded)
         val bondedDevices = try { adapter.bondedDevices } catch (_: Exception) { null }
         val pairedEsp = bondedDevices?.firstOrNull {
             it.name == BleConstants.DEVICE_NAME || it.name?.contains("ESP32", ignoreCase = true) == true
         }
 
         if (pairedEsp != null) {
-            Log.d(TAG, "Ditemukan di Perangkat Tersimpan: ${pairedEsp.name} [${pairedEsp.address}], langsung menyambungkan...")
+            Log.d(TAG, "Ditemukan di Perangkat Tersimpan: ${pairedEsp.name} [${pairedEsp.address}], menghubungkan...")
             connectToDevice(pairedEsp)
             return
         }
@@ -116,18 +117,23 @@ class BleManager private constructor(private val context: Context) {
         }
 
         if (connectedEsp != null) {
-            Log.d(TAG, "Ditemukan di profil GATT: ${connectedEsp.name}, langsung menyambungkan...")
+            Log.d(TAG, "Ditemukan di profil GATT: ${connectedEsp.name}, menghubungkan...")
             connectToDevice(connectedEsp)
             return
         }
 
-        // 3. Jika belum dipairing, lakukan pemindaian BLE aktif
-        updateState(ConnectionState.SCANNING, "Memindai ESP32-SmartNotif...")
-
+        // 3. Scan BLE aktif
         val scanner = adapter.bluetoothLeScanner ?: run {
             updateState(ConnectionState.DISCONNECTED, "BLE Scanner tidak tersedia")
             return
         }
+
+        if (isScanning) {
+            try { scanner.stopScan(scanCallback) } catch (_: Exception) {}
+        }
+
+        updateState(ConnectionState.SCANNING, "Memindai ESP32-SmartNotif...")
+        isScanning = true
 
         val scanSettings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
@@ -135,17 +141,17 @@ class BleManager private constructor(private val context: Context) {
             .build()
 
         handler.postDelayed({
-            if (currentState == ConnectionState.SCANNING) {
-                try {
-                    scanner.stopScan(scanCallback)
-                } catch (_: Exception) {}
-                updateState(ConnectionState.DISCONNECTED, "Perangkat tidak ditemukan")
+            if (isScanning && currentState == ConnectionState.SCANNING) {
+                isScanning = false
+                try { scanner.stopScan(scanCallback) } catch (_: Exception) {}
+                updateState(ConnectionState.DISCONNECTED, "ESP32 belum ditemukan")
             }
         }, BleConstants.SCAN_TIMEOUT_MS)
 
         try {
             scanner.startScan(null, scanSettings, scanCallback)
         } catch (e: Exception) {
+            isScanning = false
             Log.e(TAG, "Gagal memulai scan", e)
             updateState(ConnectionState.DISCONNECTED, e.localizedMessage ?: "Scan error")
         }
@@ -153,32 +159,34 @@ class BleManager private constructor(private val context: Context) {
 
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
-            result?.device?.let { device ->
-                val name = device.name ?: result.scanRecord?.deviceName
-                if (name == BleConstants.DEVICE_NAME || name?.contains("ESP32", ignoreCase = true) == true) {
-                    Log.d(TAG, "ESP32 ditemukan via scanning: $name [${device.address}]")
-                    try {
-                        bluetoothAdapter?.bluetoothLeScanner?.stopScan(this)
-                    } catch (_: Exception) {}
-                    connectToDevice(device)
-                }
+            val device = result?.device ?: return
+            val name = device.name ?: result.scanRecord?.deviceName
+
+            if (name == BleConstants.DEVICE_NAME || name?.contains("ESP32", ignoreCase = true) == true) {
+                Log.d(TAG, "ESP32 ditemukan: $name [${device.address}]")
+                isScanning = false
+                try { bluetoothAdapter?.bluetoothLeScanner?.stopScan(this) } catch (_: Exception) {}
+                connectToDevice(device)
             }
         }
 
         override fun onScanFailed(errorCode: Int) {
-            Log.e(TAG, "Scan BLE gagal dengan kode: $errorCode")
-            updateState(ConnectionState.DISCONNECTED, "Gagal memindai (Kode: $errorCode)")
+            isScanning = false
+            Log.e(TAG, "Scan BLE gagal: $errorCode")
+            updateState(ConnectionState.DISCONNECTED, "Scan gagal ($errorCode)")
         }
     }
 
     fun connectToDevice(device: BluetoothDevice) {
         lastConnectedDevice = device
-        updateState(ConnectionState.CONNECTING, "Menyambungkan ke ${device.name ?: "ESP32"}...")
+        updateState(ConnectionState.CONNECTING, "Menghubungkan ke ${device.name ?: "ESP32"}...")
 
         try {
+            bluetoothGatt?.disconnect()
             bluetoothGatt?.close()
         } catch (_: Exception) {}
 
+        // Menghubungkan via Transport LE
         bluetoothGatt = device.connectGatt(
             context,
             false,
@@ -189,9 +197,8 @@ class BleManager private constructor(private val context: Context) {
 
     fun disconnect() {
         autoReconnect = false
-        try {
-            bluetoothAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
-        } catch (_: Exception) {}
+        isScanning = false
+        try { bluetoothAdapter?.bluetoothLeScanner?.stopScan(scanCallback) } catch (_: Exception) {}
         try {
             bluetoothGatt?.disconnect()
             bluetoothGatt?.close()
@@ -205,43 +212,64 @@ class BleManager private constructor(private val context: Context) {
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.d(TAG, "Tersambung ke GATT Server ESP32, mencari Service...")
-                try {
-                    gatt?.requestMtu(128)
-                    gatt?.discoverServices()
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error discoverServices", e)
-                }
+                Log.d(TAG, "Tersambung ke GATT Server ESP32. Delay 400ms sebelum discoverServices...")
+                // Delay 400ms penting untuk stabilitas GATT Android
+                handler.postDelayed({
+                    try {
+                        gatt?.discoverServices()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error discoverServices", e)
+                    }
+                }, 400)
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Log.d(TAG, "Terputus dari GATT Server")
+                Log.d(TAG, "Terputus dari GATT Server (status: $status)")
                 rxCharacteristic = null
                 txCharacteristic = null
-                updateState(ConnectionState.DISCONNECTED, "Terputus")
+                updateState(ConnectionState.DISCONNECTED, "ESP32 Terputus")
 
-                if (autoReconnect && lastConnectedDevice != null) {
+                if (autoReconnect) {
                     handler.postDelayed({
                         if (currentState == ConnectionState.DISCONNECTED) {
                             startScanAndConnect()
                         }
-                    }, 2500)
+                    }, 2000)
                 }
             }
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS && gatt != null) {
-                val service = gatt.getService(BleConstants.SERVICE_UUID)
-                if (service != null) {
-                    rxCharacteristic = service.getCharacteristic(BleConstants.CHARACTERISTIC_RX_UUID)
-                    txCharacteristic = service.getCharacteristic(BleConstants.CHARACTERISTIC_TX_UUID)
+                Log.d(TAG, "Layanan ditemukan! Mencari karakteristik RX & TX...")
+                var foundRx: BluetoothGattCharacteristic? = null
+                var foundTx: BluetoothGattCharacteristic? = null
 
-                    // Aktifkan Notifikasi dari TX Characteristic jika ada
-                    txCharacteristic?.let { tx ->
-                        gatt.setCharacteristicNotification(tx, true)
-                        val descriptor = tx.getDescriptor(BleConstants.CCCD_UUID)
-                        descriptor?.let { desc ->
-                            desc.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                            gatt.writeDescriptor(desc)
+                for (service in gatt.services) {
+                    for (ch in service.characteristics) {
+                        val uuidStr = ch.uuid.toString().lowercase()
+                        if (uuidStr.contains("6e400002") || ch.uuid == BleConstants.CHARACTERISTIC_RX_UUID) {
+                            foundRx = ch
+                        }
+                        if (uuidStr.contains("6e400003") || ch.uuid == BleConstants.CHARACTERISTIC_TX_UUID) {
+                            foundTx = ch
+                        }
+                    }
+                }
+
+                if (foundRx != null) {
+                    rxCharacteristic = foundRx
+                    txCharacteristic = foundTx
+
+                    // Aktifkan notifikasi jika TX ditemukan
+                    foundTx?.let { tx ->
+                        try {
+                            gatt.setCharacteristicNotification(tx, true)
+                            val descriptor = tx.getDescriptor(BleConstants.CCCD_UUID)
+                            descriptor?.let { desc ->
+                                desc.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                                gatt.writeDescriptor(desc)
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error set notification", e)
                         }
                     }
 
@@ -249,8 +277,9 @@ class BleManager private constructor(private val context: Context) {
                     updateState(ConnectionState.CONNECTED, "Terhubung ke ESP32-SmartNotif")
                     processNextInQueue()
                 } else {
-                    Log.e(TAG, "Nordic UART Service tidak ditemukan pada ESP32")
-                    updateState(ConnectionState.DISCONNECTED, "Service BLE tidak cocok")
+                    Log.e(TAG, "Karakteristik RX tidak ditemukan pada ESP32")
+                    // Tetap nyatakan terhubung jika GATT sudah connect
+                    updateState(ConnectionState.CONNECTED, "Terhubung ke ESP32")
                 }
             }
         }
@@ -304,7 +333,7 @@ class BleManager private constructor(private val context: Context) {
         val started = gatt.writeCharacteristic(rx)
         if (!started) {
             isWriting = false
-            Log.e(TAG, "Gagal memulai write characteristic")
+            Log.e(TAG, "Gagal mengirim data write characteristic")
         }
     }
 }
