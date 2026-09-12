@@ -20,6 +20,7 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
+#include <BLESecurity.h>
 
 // --- PIN DEFINISI ESP32-C3 SUPERMINI ---
 #define OLED_SDA_PIN    8   // GPIO 8
@@ -42,8 +43,20 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 BLEServer* pServer = NULL;
 BLECharacteristic* pTxCharacteristic = NULL;
+BLECharacteristic* pRxCharacteristic = NULL;
+BLEAdvertising* pAdv = NULL;
+
+bool bleInitialized = false;
+bool bleActive = false;           // Bluetooth mati saat awal booting
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
+
+enum TargetOS {
+  OS_NONE,
+  OS_ANDROID,
+  OS_IOS
+};
+TargetOS currentTargetOS = OS_NONE;
 
 // --- STRUKTUR DATA NOTIFIKASI ---
 struct Notification {
@@ -70,11 +83,15 @@ enum ScreenState {
 ScreenState currentState = STATE_STANDBY;
 ScreenState lastState = STATE_STANDBY;
 
-const int MENU_TOTAL = 3;
+// Menu Lengkap (Termasuk Pilihan Sambung Android / iOS)
+const int MENU_TOTAL = 6;
 const char* menuItems[MENU_TOTAL] = {
-  "1. Riwayat Pesan",
-  "2. Status Koneksi",
-  "3. Hapus Semua Pesan"
+  "1. Sambung Android",
+  "2. Sambung iOS (iPhone)",
+  "3. Matikan Bluetooth",
+  "4. Riwayat Pesan",
+  "5. Hapus Semua Pesan",
+  "6. Status Perangkat"
 };
 int currentMenuIdx = 0;
 
@@ -88,6 +105,10 @@ unsigned long popupTimer = 0;
 const unsigned long POPUP_TIMEOUT = 10000;
 
 // Forward Declarations
+void initBLEStack();
+void startBLE(TargetOS target);
+void stopBLE();
+void showStatusToast(const char* line1, const char* line2, int delayMs);
 void drawUI();
 void drawStandby();
 void drawPopup();
@@ -131,6 +152,91 @@ class ReceiveCallbacks: public BLECharacteristicCallbacks {
     }
   }
 };
+
+// Inisialisasi Stack BLE (tanpa langsung menyalakan advertising)
+void initBLEStack() {
+  if (bleInitialized) return;
+
+  BLEDevice::init(BLE_DEVICE_NAME);
+  BLEDevice::setMTU(517);
+
+  // Security bonding untuk kestabilan pairing Android & iPhone
+  BLESecurity *pSecurity = new BLESecurity();
+  pSecurity->setAuthenticationMode(ESP_LE_AUTH_BOND);
+  pSecurity->setCapability(ESP_IO_CAP_NONE);
+
+  pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new ServerCallbacks());
+
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+
+  // Karakteristik TX (ESP32 -> HP)
+  pTxCharacteristic = pService->createCharacteristic(
+                        CHARACTERISTIC_UUID_TX,
+                        BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_READ
+                      );
+  pTxCharacteristic->addDescriptor(new BLE2902());
+
+  // Karakteristik RX (HP -> ESP32)
+  pRxCharacteristic = pService->createCharacteristic(
+                        CHARACTERISTIC_UUID_RX,
+                        BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR
+                      );
+  pRxCharacteristic->setCallbacks(new ReceiveCallbacks());
+
+  pService->start();
+
+  pAdv = BLEDevice::getAdvertising();
+  pAdv->addServiceUUID(SERVICE_UUID);
+  pAdv->setScanResponse(true);
+  pAdv->setMinPreferred(0x06);
+  pAdv->setMinPreferred(0x12);
+
+  bleInitialized = true;
+}
+
+// Menyalakan Bluetooth secara On-Demand berdasarkan pilihan Android / iOS
+void startBLE(TargetOS target) {
+  initBLEStack();
+
+  currentTargetOS = target;
+  bleActive = true;
+  oldDeviceConnected = false;
+
+  pAdv->start();
+  Serial.print(F("[BLE] Bluetooth AKTIF - Mode: "));
+  Serial.println(target == OS_ANDROID ? F("Android") : F("iOS (iPhone)"));
+}
+
+// Mematikan Bluetooth
+void stopBLE() {
+  if (bleActive) {
+    if (pAdv != NULL) {
+      pAdv->stop();
+    }
+    bleActive = false;
+    deviceConnected = false;
+    oldDeviceConnected = false;
+    currentTargetOS = OS_NONE;
+    Serial.println(F("[BLE] Bluetooth DINONAKTIFKAN"));
+  }
+}
+
+// Tampilan pesan konfirmasi cepat
+void showStatusToast(const char* line1, const char* line2, int delayMs) {
+  display.clearDisplay();
+  display.drawRect(0, 0, 128, 64, SSD1306_WHITE);
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(12, 20);
+  display.print(line1);
+  if (line2 != NULL && strlen(line2) > 0) {
+    display.setCursor(12, 35);
+    display.print(line2);
+  }
+  display.display();
+  delay(delayMs);
+}
 
 // Parser Pesan Notifikasi: Format [APP] Pengirim: Pesan
 void parseMessage(String raw) {
@@ -209,64 +315,35 @@ void setup() {
     }
   }
 
-  // Tampilan Splash Screen Minimalis
+  // Tampilan Splash Screen Bersih
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
   display.setTextSize(1);
-  display.setCursor(20, 18);
+  display.setCursor(22, 18);
   display.print(F("ESP32-C3 NOTIF"));
-  display.drawLine(20, 30, 108, 30, SSD1306_WHITE);
-  display.setCursor(32, 38);
-  display.print(F("Memulai BLE..."));
+  display.drawLine(22, 30, 106, 30, SSD1306_WHITE);
+  display.setCursor(24, 38);
+  display.print(F("Sistem Siap..."));
   display.display();
   delay(1000);
 
-  // Inisialisasi BLE dengan dukungan MTU besar (517 bytes)
-  BLEDevice::init(BLE_DEVICE_NAME);
-  BLEDevice::setMTU(517);
-
-  pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new ServerCallbacks());
-
-  BLEService *pService = pServer->createService(SERVICE_UUID);
-
-  // Karakteristik TX (ESP32 -> Android)
-  pTxCharacteristic = pService->createCharacteristic(
-                        CHARACTERISTIC_UUID_TX,
-                        BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_READ
-                      );
-  pTxCharacteristic->addDescriptor(new BLE2902());
-
-  // Karakteristik RX (Android -> ESP32)
-  BLECharacteristic *pRxCharacteristic = pService->createCharacteristic(
-                                           CHARACTERISTIC_UUID_RX,
-                                           BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR
-                                         );
-  pRxCharacteristic->setCallbacks(new ReceiveCallbacks());
-
-  pService->start();
-
-  // Advertising BLE
-  BLEAdvertising *pAdv = BLEDevice::getAdvertising();
-  pAdv->addServiceUUID(SERVICE_UUID);
-  pAdv->setScanResponse(true);
-  pAdv->setMinPreferred(0x06);
-  pAdv->setMinPreferred(0x12);
-  BLEDevice::startAdvertising();
-
-  Serial.println(F("[BLE] Siap disambungkan ke HP!"));
+  // CATATAN: Bluetooth TIDAK langsung dinyalakan saat boot!
+  // Pengguna menyalakan Bluetooth lewat Menu -> Sambung Android / iOS.
+  Serial.println(F("[SISTEM] Boot selesai. Bluetooth OFF (Pilih Sambung di Menu)."));
 }
 
 // --- LOOP UTAMA ---
 void loop() {
-  // Re-connect BLE Advertising jika terputus
-  if (!deviceConnected && oldDeviceConnected) {
-    delay(200);
-    pServer->startAdvertising();
-    oldDeviceConnected = deviceConnected;
-  }
-  if (deviceConnected && !oldDeviceConnected) {
-    oldDeviceConnected = deviceConnected;
+  // Re-connect BLE Advertising jika terputus (hanya jika BLE dalam keadaan aktif)
+  if (bleActive) {
+    if (!deviceConnected && oldDeviceConnected) {
+      delay(200);
+      if (pAdv != NULL) pAdv->start();
+      oldDeviceConnected = deviceConnected;
+    }
+    if (deviceConnected && !oldDeviceConnected) {
+      oldDeviceConnected = deviceConnected;
+    }
   }
 
   // Auto-dismiss popup notifikasi setelah batas waktu
@@ -333,25 +410,39 @@ void loop() {
         currentState = STATE_NOTIF_LIST;
       }
       else if (currentState == STATE_MENU) {
+        // 1. Sambung Android
         if (currentMenuIdx == 0) {
+          startBLE(OS_ANDROID);
+          showStatusToast("Bluetooth AKTIF", "Mode: Android", 1000);
+          currentState = STATE_STANDBY;
+        }
+        // 2. Sambung iOS (iPhone)
+        else if (currentMenuIdx == 1) {
+          startBLE(OS_IOS);
+          showStatusToast("Bluetooth AKTIF", "Mode: iOS (iPhone)", 1000);
+          currentState = STATE_STANDBY;
+        }
+        // 3. Matikan Bluetooth
+        else if (currentMenuIdx == 2) {
+          stopBLE();
+          showStatusToast("Bluetooth MATI", "Mode Standby", 900);
+          currentState = STATE_STANDBY;
+        }
+        // 4. Riwayat Pesan
+        else if (currentMenuIdx == 3) {
           currentState = STATE_NOTIF_LIST;
           selectedNotif = 0;
         }
-        else if (currentMenuIdx == 1) {
-          currentState = STATE_DEVICE_STATUS;
-        }
-        else if (currentMenuIdx == 2) {
-          // Hapus semua pesan
+        // 5. Hapus Semua Pesan
+        else if (currentMenuIdx == 4) {
           notifCount = 0;
           selectedNotif = 0;
-          display.clearDisplay();
-          display.setTextSize(1);
-          display.setTextColor(SSD1306_WHITE);
-          display.setCursor(18, 26);
-          display.print(F("Riwayat Terhapus"));
-          display.display();
-          delay(800);
+          showStatusToast("Riwayat Pesan", "Telah Dihapus", 800);
           currentState = STATE_STANDBY;
+        }
+        // 6. Status Perangkat
+        else if (currentMenuIdx == 5) {
+          currentState = STATE_DEVICE_STATUS;
         }
       }
       else if (currentState == STATE_DEVICE_STATUS) {
@@ -360,13 +451,13 @@ void loop() {
     }
   }
 
-  // Gambar Tampilan Layar
+  // Render Layar
   drawUI();
   delay(15);
 }
 
 // ===================================================================================
-// DESAIN TAMPILAN OLED (CLEAN, MINIMALIST & TIDAK BERANTAKAN)
+// DESAIN TAMPILAN OLED (MINIMALIS, BERSIH, MUDAH DIBACA)
 // ===================================================================================
 
 // Header Status Bar Bersih
@@ -376,15 +467,17 @@ void drawTopBar(const char* title, bool showBadge) {
   display.setCursor(0, 0);
   display.print(title);
 
-  display.setCursor(84, 0);
-  if (deviceConnected) {
-    display.print(F("[ON]"));
-  } else {
+  display.setCursor(76, 0);
+  if (!bleActive) {
     display.print(F("[OFF]"));
+  } else if (deviceConnected) {
+    display.print(F("[CON]"));
+  } else {
+    display.print(F("[ON]"));
   }
 
   if (showBadge && notifCount > 0) {
-    display.setCursor(114, 0);
+    display.setCursor(110, 0);
     display.print("(");
     display.print(notifCount);
     display.print(")");
@@ -441,19 +534,31 @@ void drawStandby() {
   display.setTextColor(SSD1306_WHITE);
 
   if (notifCount == 0) {
-    display.setCursor(16, 22);
-    if (deviceConnected) {
+    if (!bleActive) {
+      display.setCursor(8, 20);
+      display.print(F("Bluetooth: OFF"));
+      display.setCursor(0, 34);
+      display.print(F("Tekan B2 utk Sambung"));
+    } else if (deviceConnected) {
+      display.setCursor(8, 20);
       display.print(F("HP Terhubung"));
-      display.setCursor(6, 36);
-      display.print(F("Siap terima notif"));
+      display.setCursor(0, 34);
+      display.print(F("Siap terima notifikasi"));
     } else {
-      display.print(F("Mode Standby"));
-      display.setCursor(4, 36);
-      display.print(F("Menunggu koneksi..."));
+      display.setCursor(8, 20);
+      display.print(F("Mencari HP..."));
+      display.setCursor(0, 34);
+      if (currentTargetOS == OS_ANDROID) {
+        display.print(F("Target: Android"));
+      } else if (currentTargetOS == OS_IOS) {
+        display.print(F("Target: iPhone (iOS)"));
+      } else {
+        display.print(F("Mode Standby"));
+      }
     }
-    drawBottomBar("B1:Menu", "B2:Menu");
+    drawBottomBar("B1:Riwayat", "B2:Menu");
   } else {
-    // Tampilkan ringkasan pesan terbaru secara rapi
+    // Tampilkan ringkasan pesan terbaru
     Notification n = notifHistory[0];
     display.setCursor(0, 14);
     display.print(F("["));
@@ -575,12 +680,22 @@ void drawNotifDetail() {
   drawBottomBar("B1:Next", "B2:Kembali");
 }
 
-// 5. MENU PENGATURAN
+// 5. MENU PENGATURAN (Smooth Scrolling Window)
 void drawMenu() {
   drawTopBar("MENU", true);
 
-  for (int i = 0; i < MENU_TOTAL; i++) {
-    int y = 14 + (i * 12);
+  // Tampilkan jendela 3 item berdasarkan posisi kursor saat ini
+  int startIdx = 0;
+  if (currentMenuIdx >= 2) {
+    startIdx = currentMenuIdx - 2;
+    if (startIdx + 3 > MENU_TOTAL) {
+      startIdx = MENU_TOTAL - 3;
+    }
+  }
+
+  for (int i = startIdx; i < startIdx + 3 && i < MENU_TOTAL; i++) {
+    int lineRow = i - startIdx;
+    int y = 14 + (lineRow * 12);
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
     display.setCursor(0, y);
@@ -606,11 +721,17 @@ void drawDeviceStatus() {
   display.print(F("Perangkat: ESP32-C3"));
 
   display.setCursor(0, 26);
-  display.print(F("BLE   : "));
-  display.print(deviceConnected ? "ONLINE (HP)" : "STANDBY");
+  display.print(F("Bluetooth: "));
+  if (!bleActive) {
+    display.print(F("OFF"));
+  } else if (deviceConnected) {
+    display.print(F("CONNECTED"));
+  } else {
+    display.print(currentTargetOS == OS_ANDROID ? "CARI (AND)" : "CARI (iOS)");
+  }
 
   display.setCursor(0, 38);
-  display.print(F("Pesan : "));
+  display.print(F("Pesan    : "));
   display.print(notifCount);
   display.print(F(" tersimpan"));
 
