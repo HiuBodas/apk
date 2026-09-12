@@ -3,7 +3,6 @@ package com.esp32.smartnotif.ble
 import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
@@ -44,6 +43,10 @@ class BleManager private constructor(private val context: Context) {
     private val bluetoothAdapter: BluetoothAdapter? by lazy {
         val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
+    }
+
+    private val bluetoothManager: BluetoothManager by lazy {
+        context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     }
 
     private var bluetoothGatt: BluetoothGatt? = null
@@ -94,6 +97,31 @@ class BleManager private constructor(private val context: Context) {
 
         if (currentState == ConnectionState.CONNECTED) return
 
+        // 1. Prioritas Utama: Cek apakah ESP32 sudah terpasang/tersimpan di sistem Bluetooth HP
+        val bondedDevices = try { adapter.bondedDevices } catch (_: Exception) { null }
+        val pairedEsp = bondedDevices?.firstOrNull {
+            it.name == BleConstants.DEVICE_NAME || it.name?.contains("ESP32", ignoreCase = true) == true
+        }
+
+        if (pairedEsp != null) {
+            Log.d(TAG, "Ditemukan di Perangkat Tersimpan: ${pairedEsp.name} [${pairedEsp.address}], langsung menyambungkan...")
+            connectToDevice(pairedEsp)
+            return
+        }
+
+        // 2. Cek apakah sudah terhubung di GATT system profile
+        val connectedGatt = try { bluetoothManager.getConnectedDevices(BluetoothProfile.GATT) } catch (_: Exception) { emptyList() }
+        val connectedEsp = connectedGatt.firstOrNull {
+            it.name == BleConstants.DEVICE_NAME || it.name?.contains("ESP32", ignoreCase = true) == true
+        }
+
+        if (connectedEsp != null) {
+            Log.d(TAG, "Ditemukan di profil GATT: ${connectedEsp.name}, langsung menyambungkan...")
+            connectToDevice(connectedEsp)
+            return
+        }
+
+        // 3. Jika belum dipairing, lakukan pemindaian BLE aktif
         updateState(ConnectionState.SCANNING, "Memindai ESP32-SmartNotif...")
 
         val scanner = adapter.bluetoothLeScanner ?: run {
@@ -103,21 +131,20 @@ class BleManager private constructor(private val context: Context) {
 
         val scanSettings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+            .setReportDelay(0)
             .build()
-
-        val filters = listOf(
-            ScanFilter.Builder().setDeviceName(BleConstants.DEVICE_NAME).build()
-        )
 
         handler.postDelayed({
             if (currentState == ConnectionState.SCANNING) {
-                scanner.stopScan(scanCallback)
+                try {
+                    scanner.stopScan(scanCallback)
+                } catch (_: Exception) {}
                 updateState(ConnectionState.DISCONNECTED, "Perangkat tidak ditemukan")
             }
         }, BleConstants.SCAN_TIMEOUT_MS)
 
         try {
-            scanner.startScan(filters, scanSettings, scanCallback)
+            scanner.startScan(null, scanSettings, scanCallback)
         } catch (e: Exception) {
             Log.e(TAG, "Gagal memulai scan", e)
             updateState(ConnectionState.DISCONNECTED, e.localizedMessage ?: "Scan error")
@@ -127,9 +154,12 @@ class BleManager private constructor(private val context: Context) {
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
             result?.device?.let { device ->
-                val name = device.name
-                if (name == BleConstants.DEVICE_NAME || name?.contains("ESP32") == true) {
-                    bluetoothAdapter?.bluetoothLeScanner?.stopScan(this)
+                val name = device.name ?: result.scanRecord?.deviceName
+                if (name == BleConstants.DEVICE_NAME || name?.contains("ESP32", ignoreCase = true) == true) {
+                    Log.d(TAG, "ESP32 ditemukan via scanning: $name [${device.address}]")
+                    try {
+                        bluetoothAdapter?.bluetoothLeScanner?.stopScan(this)
+                    } catch (_: Exception) {}
                     connectToDevice(device)
                 }
             }
@@ -145,15 +175,27 @@ class BleManager private constructor(private val context: Context) {
         lastConnectedDevice = device
         updateState(ConnectionState.CONNECTING, "Menyambungkan ke ${device.name ?: "ESP32"}...")
 
-        bluetoothGatt?.close()
-        bluetoothGatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+        try {
+            bluetoothGatt?.close()
+        } catch (_: Exception) {}
+
+        bluetoothGatt = device.connectGatt(
+            context,
+            false,
+            gattCallback,
+            BluetoothDevice.TRANSPORT_LE
+        )
     }
 
     fun disconnect() {
         autoReconnect = false
-        bluetoothAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
-        bluetoothGatt?.disconnect()
-        bluetoothGatt?.close()
+        try {
+            bluetoothAdapter?.bluetoothLeScanner?.stopScan(scanCallback)
+        } catch (_: Exception) {}
+        try {
+            bluetoothGatt?.disconnect()
+            bluetoothGatt?.close()
+        } catch (_: Exception) {}
         bluetoothGatt = null
         rxCharacteristic = null
         txCharacteristic = null
@@ -163,9 +205,13 @@ class BleManager private constructor(private val context: Context) {
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.d(TAG, "Tersambung ke GATT Server, memulai discovery service...")
-                gatt?.requestMtu(128)
-                gatt?.discoverServices()
+                Log.d(TAG, "Tersambung ke GATT Server ESP32, mencari Service...")
+                try {
+                    gatt?.requestMtu(128)
+                    gatt?.discoverServices()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error discoverServices", e)
+                }
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.d(TAG, "Terputus dari GATT Server")
                 rxCharacteristic = null
@@ -177,7 +223,7 @@ class BleManager private constructor(private val context: Context) {
                         if (currentState == ConnectionState.DISCONNECTED) {
                             startScanAndConnect()
                         }
-                    }, 3000)
+                    }, 2500)
                 }
             }
         }
