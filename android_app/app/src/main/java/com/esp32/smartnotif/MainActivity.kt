@@ -15,9 +15,11 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.esp32.smartnotif.ble.BleManager
 import com.esp32.smartnotif.databinding.ActivityMainBinding
+import com.esp32.smartnotif.model.BleDeviceItem
 import com.esp32.smartnotif.model.NotifLogItem
 import com.esp32.smartnotif.service.BleForegroundService
 import com.esp32.smartnotif.service.NotificationReceiverService
+import com.esp32.smartnotif.ui.BleDeviceAdapter
 import com.esp32.smartnotif.ui.LogAdapter
 import com.esp32.smartnotif.utils.AppFilterManager
 import com.esp32.smartnotif.utils.PermissionHelper
@@ -25,12 +27,13 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
+class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManager.BleDiscoveryListener {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var bleManager: BleManager
     private lateinit var appFilterManager: AppFilterManager
     private val logAdapter = LogAdapter()
+    private lateinit var bleDeviceAdapter: BleDeviceAdapter
 
     // Request permissions launcher
     private val requestPermissionLauncher = registerForActivityResult(
@@ -72,15 +75,19 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
         setupListeners()
         checkAndRequestPermissions()
 
-        // Hentikan Foreground Service agar tidak memunculkan notifikasi connect/disconnect di status bar
-        BleForegroundService.stopService(this)
+        // Jika sudah dalam kondisi terhubung, pastikan Foreground Service tetap berjalan aktif
+        if (bleManager.currentState == BleManager.ConnectionState.CONNECTED) {
+            BleForegroundService.startService(this)
+        }
     }
 
     override fun onResume() {
         super.onResume()
         bleManager.addListener(this)
+        bleManager.addDiscoveryListener(this)
         checkNotificationAccess()
         syncSettingSwitches()
+        updateSettingBleDeviceCard()
 
         // Otomatis hubungkan jika sedang terputus
         if (bleManager.currentState == BleManager.ConnectionState.DISCONNECTED &&
@@ -99,6 +106,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
     override fun onPause() {
         super.onPause()
         bleManager.removeListener(this)
+        bleManager.removeDiscoveryListener(this)
         try {
             unregisterReceiver(logBroadcastReceiver)
         } catch (_: Exception) {}
@@ -110,8 +118,16 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
         binding.rvNotifLogs.adapter = logAdapter
         updateEmptyLogsView()
 
-        // Sinkronisasi awal saklar setting
+        // Setup RecyclerView Daftar Perangkat BLE di Tab Setting
+        bleDeviceAdapter = BleDeviceAdapter { selectedDeviceItem ->
+            onBleDeviceSelected(selectedDeviceItem)
+        }
+        binding.rvBleDevices.layoutManager = LinearLayoutManager(this)
+        binding.rvBleDevices.adapter = bleDeviceAdapter
+
+        // Sinkronisasi awal saklar setting & kartu BLE
         syncSettingSwitches()
+        updateSettingBleDeviceCard()
     }
 
     private fun setupListeners() {
@@ -127,6 +143,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
                     binding.layoutMenuUtama.visibility = View.GONE
                     binding.layoutSetting.visibility = View.VISIBLE
                     syncSettingSwitches()
+                    updateSettingBleDeviceCard()
                     true
                 }
                 else -> false
@@ -185,16 +202,46 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
             appFilterManager.isInstagramEnabled = isChecked
         }
 
-        // D. Tombol Pindai Ulang Bluetooth ESP32
+        // D. Tombol Mulai / Hentikan Pindai Bluetooth ESP32
         binding.btnMenuRescanBle.setOnClickListener {
-            if (PermissionHelper.hasAllRuntimePermissions(this)) {
-                bleManager.disconnect()
-                bleManager.startScanAndConnect()
-                Toast.makeText(this, "Memindai ulang ESP32...", Toast.LENGTH_SHORT).show()
-            } else {
+            if (!PermissionHelper.hasAllRuntimePermissions(this)) {
                 requestPermissionLauncher.launch(PermissionHelper.getRequiredPermissions())
+                return@setOnClickListener
+            }
+
+            if (bleManager.isDiscovering) {
+                bleManager.stopDiscovery()
+            } else {
+                val filterEsp = binding.switchFilterEspOnly.isChecked
+                bleManager.startDiscovery(filterEsp)
+                Toast.makeText(
+                    this,
+                    if (filterEsp) "Memindai modul ESP32-C3 di sekitar..." else "Memindai semua perangkat Bluetooth...",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
+
+        // E. Saklar Filter Khusus ESP32
+        binding.switchFilterEspOnly.setOnCheckedChangeListener { _, isChecked ->
+            if (bleManager.isDiscovering) {
+                bleManager.startDiscovery(isChecked)
+            }
+        }
+
+        // F. Tombol Putuskan Koneksi
+        binding.btnDisconnectBle.setOnClickListener {
+            bleManager.disconnect()
+            Toast.makeText(this, "Koneksi Bluetooth diputus", Toast.LENGTH_SHORT).show()
+            updateSettingBleDeviceCard()
+        }
+    }
+
+    private fun onBleDeviceSelected(item: BleDeviceItem) {
+        Toast.makeText(this, "Menghubungkan ke ${item.name}...", Toast.LENGTH_SHORT).show()
+        bleDeviceAdapter.updateConnectionStatus(null, item.address)
+        bleManager.connectToDevice(item.device)
+        updateSettingBleDeviceCard()
     }
 
     private fun syncSettingSwitches() {
@@ -234,25 +281,62 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
         binding.rvNotifLogs.visibility = if (isEmpty) View.GONE else View.VISIBLE
     }
 
+    private fun updateSettingBleDeviceCard() {
+        val isConnected = bleManager.currentState == BleManager.ConnectionState.CONNECTED
+        val isConnecting = bleManager.currentState == BleManager.ConnectionState.CONNECTING
+        val devName = bleManager.connectedDeviceName ?: bleManager.savedDeviceName ?: "ESP32-SmartNotif"
+        val devAddress = bleManager.connectedDeviceAddress ?: bleManager.savedDeviceAddress
+
+        when {
+            isConnected -> {
+                binding.viewSettingBleDot.backgroundTintList =
+                    ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_connected))
+                binding.tvSettingDeviceName.text = devName
+                binding.tvSettingDeviceAddress.text = "MAC: ${devAddress ?: "Tersambung"} • Terhubung"
+                binding.btnDisconnectBle.visibility = View.VISIBLE
+            }
+            isConnecting -> {
+                binding.viewSettingBleDot.backgroundTintList =
+                    ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_connecting))
+                binding.tvSettingDeviceName.text = devName
+                binding.tvSettingDeviceAddress.text = "Menghubungkan ke ${devAddress ?: "perangkat"}..."
+                binding.btnDisconnectBle.visibility = View.GONE
+            }
+            else -> {
+                binding.viewSettingBleDot.backgroundTintList =
+                    ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_disconnected))
+                binding.tvSettingDeviceName.text = if (devAddress != null) "Terputus dari $devName" else "Tidak Ada Perangkat Terhubung"
+                binding.tvSettingDeviceAddress.text = if (devAddress != null) "MAC: $devAddress (Siap dihubungkan)" else "Tekan Mulai Pindai untuk mendeteksi ESP32-C3"
+                binding.btnDisconnectBle.visibility = View.GONE
+            }
+        }
+
+        bleDeviceAdapter.updateConnectionStatus(
+            bleManager.connectedDeviceAddress,
+            if (isConnecting) bleManager.lastConnectedDevice?.address else null
+        )
+    }
+
     // --- BLE State Listener Callbacks ---
     override fun onStateChanged(state: BleManager.ConnectionState, message: String) {
         runOnUiThread {
+            val devName = bleManager.connectedDeviceName ?: bleManager.savedDeviceName ?: "ESP32-SmartNotif"
             when (state) {
                 BleManager.ConnectionState.CONNECTED -> {
                     binding.tvBleStatus.text = getString(R.string.status_connected)
-                    binding.tvBleDetail.text = "ESP32-SmartNotif Aktif - Siap Menerima Chat"
+                    binding.tvBleDetail.text = "$devName Aktif - Siap Menerima Chat"
                     binding.viewStatusDot.backgroundTintList =
                         ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_connected))
                 }
                 BleManager.ConnectionState.CONNECTING -> {
                     binding.tvBleStatus.text = getString(R.string.status_connecting)
-                    binding.tvBleDetail.text = "Menghubungkan ke ESP32-SmartNotif..."
+                    binding.tvBleDetail.text = "Menghubungkan ke $devName..."
                     binding.viewStatusDot.backgroundTintList =
                         ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_connecting))
                 }
                 BleManager.ConnectionState.SCANNING -> {
                     binding.tvBleStatus.text = getString(R.string.status_scanning)
-                    binding.tvBleDetail.text = "Mencari perangkat ESP32-SmartNotif di sekitar..."
+                    binding.tvBleDetail.text = "Mencari perangkat $devName di sekitar..."
                     binding.viewStatusDot.backgroundTintList =
                         ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_connecting))
                 }
@@ -263,6 +347,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
                         ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_disconnected))
                 }
             }
+            updateSettingBleDeviceCard()
         }
     }
 
@@ -275,4 +360,49 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
     }
 
     override fun onDataSent(data: String, success: Boolean) {}
+
+    // --- BleDiscoveryListener Callbacks ---
+    override fun onDiscoveryStarted() {
+        runOnUiThread {
+            binding.btnMenuRescanBle.text = "Hentikan Pemindaian"
+            binding.pbScanLoading.visibility = View.VISIBLE
+            binding.tvScanStatusInfo.visibility = View.VISIBLE
+            val filterEsp = binding.switchFilterEspOnly.isChecked
+            binding.tvScanStatusInfo.text = if (filterEsp) {
+                "Memindai modul ESP32-C3 di sekitar..."
+            } else {
+                "Memindai semua perangkat Bluetooth BLE di sekitar..."
+            }
+        }
+    }
+
+    override fun onDiscoveryFinished() {
+        runOnUiThread {
+            binding.btnMenuRescanBle.text = "Mulai Pindai Bluetooth"
+            binding.pbScanLoading.visibility = View.GONE
+            binding.tvScanStatusInfo.visibility = View.GONE
+        }
+    }
+
+    override fun onDeviceFound(devices: List<BleDeviceItem>) {
+        runOnUiThread {
+            bleDeviceAdapter.setDevices(
+                devices,
+                bleManager.connectedDeviceAddress,
+                if (bleManager.currentState == BleManager.ConnectionState.CONNECTING) bleManager.lastConnectedDevice?.address else null
+            )
+            val isEmpty = devices.isEmpty()
+            binding.layoutEmptyBleDevices.visibility = if (isEmpty) View.VISIBLE else View.GONE
+            binding.rvBleDevices.visibility = if (isEmpty) View.GONE else View.VISIBLE
+            if (isEmpty) {
+                val filterEsp = binding.switchFilterEspOnly.isChecked
+                binding.tvEmptyBleDevicesMsg.text = if (filterEsp) {
+                    "Belum ada ESP32 terdeteksi.\nPastikan ESP32-C3 menyala lalu tekan Mulai Pindai."
+                } else {
+                    "Belum ada perangkat BLE terdeteksi.\nPastikan Bluetooth HP menyala."
+                }
+            }
+        }
+    }
 }
+

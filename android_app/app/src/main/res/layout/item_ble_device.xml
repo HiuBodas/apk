@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/bg_card"
+    android:padding="12dp"
+    android:gravity="center_vertical"
+    android:layout_marginBottom="8dp">
+
+    <!-- Icon Perangkat -->
+    <FrameLayout
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:background="@drawable/bg_badge"
+        android:backgroundTint="@color/card_stroke">
+
+        <ImageView
+            android:id="@+id/ivDeviceIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_bluetooth"
+            app:tint="@color/primary"
+            android:contentDescription="Bluetooth Device" />
+    </FrameLayout>
+
+    <!-- Info Perangkat -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
+        android:orientation="vertical">
+
+        <!-- Baris Nama & Badge ESP32 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvDeviceName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="ESP32-SmartNotif" />
+
+            <TextView
+                android:id="@+id/tvEspBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="ESP32 C3"
+                android:textColor="@color/white"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="1.5dp"
+                android:background="@drawable/bg_badge"
+                android:backgroundTint="#059669"
+                android:visibility="visible" />
+        </LinearLayout>
+
+        <!-- Baris MAC & RSSI -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="3dp">
+
+            <TextView
+                android:id="@+id/tvDeviceAddress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_muted"
+                android:textSize="11sp"
+                android:fontFamily="monospace"
+                tools:text="AA:BB:CC:11:22:33" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" • "
+                android:textColor="@color/text_muted"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/tvDeviceRssi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                tools:text="-65 dBm" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Tombol Hubungkan / Status Terhubung -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnConnectDevice"
+        android:layout_width="wrap_content"
+        android:layout_height="38dp"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="0dp"
+        android:text="Hubungkan"
+        android:textColor="@color/white"
+        android:textSize="11.5sp"
+        android:textStyle="bold"
+        app:cornerRadius="8dp"
+        app:backgroundTint="@color/primary"
+        android:insetTop="0dp"
+        android:insetBottom="0dp" />
+
+</LinearLayout>
