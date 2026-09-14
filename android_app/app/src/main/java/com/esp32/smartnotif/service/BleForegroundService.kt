@@ -35,19 +35,9 @@ class BleForegroundService : Service() {
         }
     }
 
-    private val bleStateListener = object : BleManager.BleStateListener {
-        override fun onStateChanged(state: BleManager.ConnectionState, message: String) {
-            updateNotification("Status: ${state.name}")
-        }
-
-        override fun onDataReceived(data: String) {}
-        override fun onDataSent(data: String, success: Boolean) {}
-    }
-
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-        BleManager.getInstance(this).addListener(bleStateListener)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -97,13 +87,7 @@ class BleForegroundService : Service() {
             .build()
     }
 
-    private fun updateNotification(text: String) {
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(NOTIF_ID, buildForegroundNotification(text))
-    }
-
     override fun onDestroy() {
-        BleManager.getInstance(this).removeListener(bleStateListener)
         super.onDestroy()
     }
 

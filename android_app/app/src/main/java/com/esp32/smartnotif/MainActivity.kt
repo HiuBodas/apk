@@ -72,8 +72,8 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
         setupListeners()
         checkAndRequestPermissions()
 
-        // Mulai Foreground Service agar koneksi background tetap hidup
-        BleForegroundService.startService(this)
+        // Hentikan Foreground Service agar tidak memunculkan notifikasi connect/disconnect di status bar
+        BleForegroundService.stopService(this)
     }
 
     override fun onResume() {
