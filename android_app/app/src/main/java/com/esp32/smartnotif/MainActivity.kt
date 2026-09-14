@@ -133,12 +133,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
             }
         }
 
-        // 2. Tombol cepat jika banner akses notifikasi muncul di Menu Utama
-        binding.btnQuickGrantNotif.setOnClickListener {
-            PermissionHelper.openNotificationAccessSettings(this)
-        }
-
-        // 3. Tombol Kirim Tes Notifikasi di Menu Utama
+        // 2. Tombol Kirim Tes Notifikasi di Menu Utama
         binding.btnSendTest.setOnClickListener {
             val sender = binding.etTestSender.text?.toString()?.trim() ?: "Pengirim"
             val msg = binding.etTestMessage.text?.toString()?.trim() ?: ""
@@ -158,25 +153,25 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
             Toast.makeText(this, "Pesan dikirim ke ESP32", Toast.LENGTH_SHORT).show()
         }
 
-        // 4. Hapus Log di Menu Utama
+        // 3. Hapus Log di Menu Utama
         binding.btnClearLogs.setOnClickListener {
             logAdapter.clear()
             updateEmptyLogsView()
         }
 
-        // 5. Kontrol di Tab Setting:
-        // A. Tombol Buka Info Aplikasi (Akses Titik Tiga)
-        binding.btnMenuAppInfo.setOnClickListener {
-            PermissionHelper.openAppDetailsSettings(this)
-            Toast.makeText(this, "Tekan menu titik tiga di kanan atas -> Izinkan setelan terbatas", Toast.LENGTH_LONG).show()
-        }
-
-        // B. Tombol Pengaturan Akses Notifikasi
+        // 4. Kontrol di Tab Setting:
+        // A. Tombol Pengaturan Akses Notifikasi
         binding.btnMenuNotifAccess.setOnClickListener {
             PermissionHelper.openNotificationAccessSettings(this)
         }
 
-        // C. Saklar Filter Aplikasi
+        // B. Tombol Buka Info Aplikasi
+        binding.btnMenuAppInfo.setOnClickListener {
+            PermissionHelper.openAppDetailsSettings(this)
+            Toast.makeText(this, "Jika titik tiga tidak muncul, buka Pengaturan HP -> Aplikasi -> Lihat semua", Toast.LENGTH_LONG).show()
+        }
+
+        // C. Saklar Filter Aplikasi (ada di Menu Utama)
         binding.switchWA.setOnCheckedChangeListener { _, isChecked ->
             appFilterManager.isWhatsAppEnabled = isChecked
         }
@@ -219,7 +214,13 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
 
     private fun checkNotificationAccess() {
         val hasAccess = PermissionHelper.isNotificationAccessGranted(this)
-        binding.layoutPermissionWarning.visibility = if (hasAccess) View.GONE else View.VISIBLE
+        if (hasAccess) {
+            binding.tvNotifStatusBadge.text = "Izin Aktif"
+            binding.tvNotifStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.status_connected))
+        } else {
+            binding.tvNotifStatusBadge.text = "Belum Aktif"
+            binding.tvNotifStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.status_connecting))
+        }
     }
 
     private fun addLogItem(item: NotifLogItem) {

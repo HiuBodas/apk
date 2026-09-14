@@ -127,59 +127,87 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Peringatan Akses Notifikasi Belum Aktif -->
+                <!-- KARTU FILTER APLIKASI YANG DITERUSKAN (DI MENU UTAMA) -->
                 <LinearLayout
-                    android:id="@+id/layoutPermissionWarning"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
                     android:padding="16dp"
-                    android:layout_marginBottom="14dp"
-                    android:visibility="gone"
-                    tools:visibility="visible">
+                    android:layout_marginBottom="14dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="10dp">
 
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_warning_amber"
-                            android:contentDescription="Peringatan" />
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_filter_list"
+                            app:tint="@color/primary"
+                            android:contentDescription="Filter Notifikasi" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="Akses Notifikasi Belum Diizinkan"
-                            android:textColor="#F59E0B"
+                            android:text="Filter Aplikasi yang Diteruskan"
+                            android:textColor="@color/text_primary"
                             android:textSize="13sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Buka tab Setting di bawah untuk mengaktifkan izin notifikasi atau membuka izin setelan terbatas."
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:layout_marginTop="6dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnQuickGrantNotif"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:text="Aktifkan Akses Notifikasi"
-                        android:textSize="12sp"
-                        app:icon="@drawable/ic_notifications_active"
-                        app:iconGravity="textStart"
-                        app:cornerRadius="8dp"
-                        app:backgroundTint="@color/primary" />
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchWA"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/filter_wa"
+                            android:textColor="@color/text_primary"
+                            android:checked="true" />
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchTelegram"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/filter_telegram"
+                            android:textColor="@color/text_primary"
+                            android:checked="true" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="6dp">
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchSMS"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/filter_sms"
+                            android:textColor="@color/text_primary"
+                            android:checked="true" />
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchIG"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/filter_ig"
+                            android:textColor="@color/text_primary"
+                            android:checked="true" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <!-- KARTU TES KIRIM PESAN MANUAL -->
@@ -343,13 +371,13 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Kelola izin keamanan sistem, filter notifikasi, dan Bluetooth"
+                        android:text="Kelola akses notifikasi sistem, izin keamanan, dan Bluetooth"
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp"
                         android:layout_marginTop="2dp" />
                 </LinearLayout>
 
-                <!-- SEKSI 1: IZIN & KEAMANAN SISTEM -->
+                <!-- SEKSI 1: AKSES NOTIFIKASI & IZIN SISTEM (DI SETTING) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -363,145 +391,117 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="8dp">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@drawable/ic_shield_security"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_notifications_active"
                             app:tint="@color/primary"
-                            android:contentDescription="Izin Sistem" />
+                            android:contentDescription="Izin Notifikasi" />
 
                         <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:text="Akses Notifikasi Android"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvNotifStatusBadge"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="Izin dan Keamanan Android"
-                            android:textColor="@color/text_primary"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                            android:text="Belum Aktif"
+                            android:textColor="@color/status_connecting"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="2dp"
+                            android:background="@drawable/bg_badge"
+                            android:backgroundTint="@color/card_stroke" />
                     </LinearLayout>
-
-                    <!-- Tombol Buka Info Aplikasi untuk Setelan Terbatas -->
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnMenuAppInfo"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Buka Info Aplikasi (Buka Setelan Terbatas)"
-                        android:textColor="@color/white"
-                        android:textSize="13sp"
-                        app:icon="@drawable/ic_app_settings"
-                        app:iconGravity="textStart"
-                        app:cornerRadius="8dp"
-                        app:backgroundTint="#D97706"
-                        android:layout_marginBottom="6dp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Khusus Android 13+: Tekan menu titik tiga di halaman Info Aplikasi lalu pilih Izinkan setelan terbatas agar akses notifikasi dapat diaktifkan."
+                        android:text="Aplikasi memerlukan izin ini agar dapat meneruskan isi pesan masuk ke layar OLED ESP32."
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:layout_marginBottom="12dp" />
 
-                    <!-- Tombol Akses Notifikasi -->
+                    <!-- Tombol Utama: Buka Pengaturan Akses Notifikasi -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnMenuNotifAccess"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Pengaturan Akses Notifikasi"
+                        android:text="Buka Akses Notifikasi"
                         android:textColor="@color/white"
                         android:textSize="13sp"
                         app:icon="@drawable/ic_notifications_active"
                         app:iconGravity="textStart"
                         app:cornerRadius="8dp"
-                        app:backgroundTint="@color/primary" />
-                </LinearLayout>
+                        app:backgroundTint="@color/primary"
+                        android:layout_marginBottom="14dp" />
 
-                <!-- SEKSI 2: FILTER APLIKASI -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_card"
-                    android:padding="16dp"
-                    android:layout_marginBottom="14dp">
-
+                    <!-- KOTAK PANDUAN KHUSUS SETELAN TERBATAS (ANDROID 13/14+) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:orientation="vertical"
+                        android:background="@color/background"
+                        android:padding="12dp"
+                        android:layout_marginBottom="10dp">
 
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@drawable/ic_filter_list"
-                            app:tint="@color/primary"
-                            android:contentDescription="Filter Notifikasi" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="6dp">
+
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:src="@drawable/ic_warning_amber"
+                                android:contentDescription="Perhatian" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:text="Jika Saklar Notifikasi Abu-abu / Terkunci:"
+                                android:textColor="#F59E0B"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="Filter Notifikasi Aplikasi"
-                            android:textColor="@color/text_primary"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                            android:text="1. Di halaman Akses Notifikasi, ketuk saklar ESP32 Smart Notif hingga muncul dialog Setelan Terbatas, lalu tekan OK.\n2. Buka Pengaturan HP -> Aplikasi -> Lihat semua aplikasi -> ESP32 Smart Notif.\n3. Tekan tombol titik tiga di pojok kanan atas, lalu pilih Izinkan setelan terbatas.\n4. Kembali ke Akses Notifikasi dan aktifkan saklarnya."
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10.5sp"
+                            android:lineSpacingExtra="2dp" />
                     </LinearLayout>
 
-                    <LinearLayout
+                    <!-- Tombol Buka Info Aplikasi -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnMenuAppInfo"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/switchWA"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/filter_wa"
-                            android:textColor="@color/text_primary"
-                            android:checked="true" />
-
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/switchTelegram"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/filter_telegram"
-                            android:textColor="@color/text_primary"
-                            android:checked="true" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="6dp">
-
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/switchSMS"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/filter_sms"
-                            android:textColor="@color/text_primary"
-                            android:checked="true" />
-
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/switchIG"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/filter_ig"
-                            android:textColor="@color/text_primary"
-                            android:checked="true" />
-                    </LinearLayout>
+                        android:text="Buka Info Aplikasi"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        app:icon="@drawable/ic_app_settings"
+                        app:iconGravity="textStart"
+                        app:cornerRadius="8dp"
+                        app:backgroundTint="@color/card_stroke" />
                 </LinearLayout>
 
-                <!-- SEKSI 3: KONEKSI BLUETOOTH & DEVICE INFO -->
+                <!-- SEKSI 2: KONEKSI BLUETOOTH & DEVICE INFO -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
