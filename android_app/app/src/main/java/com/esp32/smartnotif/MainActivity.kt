@@ -133,12 +133,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
             }
         }
 
-        // 2. Tombol Cepat Aktifkan Akses Notifikasi di Menu Utama
-        binding.btnQuickGrantNotif.setOnClickListener {
-            PermissionHelper.openNotificationAccessSettings(this)
-        }
-
-        // 3. Tombol Kirim Tes Notifikasi di Menu Utama
+        // 2. Tombol Kirim Tes Notifikasi di Menu Utama
         binding.btnSendTest.setOnClickListener {
             val sender = binding.etTestSender.text?.toString()?.trim() ?: "Pengirim"
             val msg = binding.etTestMessage.text?.toString()?.trim() ?: ""
@@ -219,7 +214,6 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
 
     private fun checkNotificationAccess() {
         val hasAccess = PermissionHelper.isNotificationAccessGranted(this)
-        binding.layoutPermissionWarning.visibility = if (hasAccess) View.GONE else View.VISIBLE
         if (hasAccess) {
             binding.tvNotifStatusBadge.text = "Izin Aktif"
             binding.tvNotifStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.status_connected))
