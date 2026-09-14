@@ -15,14 +15,12 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.esp32.smartnotif.ble.BleManager
 import com.esp32.smartnotif.databinding.ActivityMainBinding
-import com.esp32.smartnotif.databinding.LayoutSettingsBottomSheetBinding
 import com.esp32.smartnotif.model.NotifLogItem
 import com.esp32.smartnotif.service.BleForegroundService
 import com.esp32.smartnotif.service.NotificationReceiverService
 import com.esp32.smartnotif.ui.LogAdapter
 import com.esp32.smartnotif.utils.AppFilterManager
 import com.esp32.smartnotif.utils.PermissionHelper
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -82,6 +80,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
         super.onResume()
         bleManager.addListener(this)
         checkNotificationAccess()
+        syncSettingSwitches()
 
         // Otomatis hubungkan jika sedang terputus
         if (bleManager.currentState == BleManager.ConnectionState.DISCONNECTED &&
@@ -106,24 +105,40 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
     }
 
     private fun setupUI() {
-        // Setup RecyclerView Log
+        // Setup RecyclerView Log di Menu Utama
         binding.rvNotifLogs.layoutManager = LinearLayoutManager(this)
         binding.rvNotifLogs.adapter = logAdapter
         updateEmptyLogsView()
+
+        // Sinkronisasi awal saklar setting
+        syncSettingSwitches()
     }
 
     private fun setupListeners() {
-        // Tombol Hamburger Menu (☰) untuk membuka BottomSheet Pengaturan & Titik Tiga
-        binding.btnHamburger.setOnClickListener {
-            showSettingsBottomSheet()
+        // 1. Bottom Navigation Bar (Navbar di bawah)
+        binding.bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    binding.layoutMenuUtama.visibility = View.VISIBLE
+                    binding.layoutSetting.visibility = View.GONE
+                    true
+                }
+                R.id.nav_settings -> {
+                    binding.layoutMenuUtama.visibility = View.GONE
+                    binding.layoutSetting.visibility = View.VISIBLE
+                    syncSettingSwitches()
+                    true
+                }
+                else -> false
+            }
         }
 
-        // Tombol cepat jika banner akses notifikasi muncul
+        // 2. Tombol cepat jika banner akses notifikasi muncul di Menu Utama
         binding.btnQuickGrantNotif.setOnClickListener {
             PermissionHelper.openNotificationAccessSettings(this)
         }
 
-        // Tombol Kirim Tes Notifikasi
+        // 3. Tombol Kirim Tes Notifikasi di Menu Utama
         binding.btnSendTest.setOnClickListener {
             val sender = binding.etTestSender.text?.toString()?.trim() ?: "Pengirim"
             val msg = binding.etTestMessage.text?.toString()?.trim() ?: ""
@@ -143,54 +158,40 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
             Toast.makeText(this, "Pesan dikirim ke ESP32", Toast.LENGTH_SHORT).show()
         }
 
-        // Hapus Log
+        // 4. Hapus Log di Menu Utama
         binding.btnClearLogs.setOnClickListener {
             logAdapter.clear()
             updateEmptyLogsView()
         }
-    }
 
-    // Modal BottomSheet Pengaturan Lengkap (Hamburger Menu)
-    private fun showSettingsBottomSheet() {
-        val dialog = BottomSheetDialog(this)
-        val sheetBinding = LayoutSettingsBottomSheetBinding.inflate(layoutInflater)
-        dialog.setContentView(sheetBinding.root)
-
-        // Setup Nilai Filter saat ini
-        sheetBinding.sheetSwitchWA.isChecked = appFilterManager.isWhatsAppEnabled
-        sheetBinding.sheetSwitchTelegram.isChecked = appFilterManager.isTelegramEnabled
-        sheetBinding.sheetSwitchSMS.isChecked = appFilterManager.isSmsEnabled
-        sheetBinding.sheetSwitchIG.isChecked = appFilterManager.isInstagramEnabled
-
-        // 1. Tombol Buka Info Aplikasi (Akses Titik Tiga ⋮)
-        sheetBinding.btnMenuAppInfo.setOnClickListener {
+        // 5. Kontrol di Tab Setting:
+        // A. Tombol Buka Info Aplikasi (Akses Titik Tiga)
+        binding.btnMenuAppInfo.setOnClickListener {
             PermissionHelper.openAppDetailsSettings(this)
-            Toast.makeText(this, "Tekan titik tiga (⋮) di kanan atas -> Izinkan setelan terbatas", Toast.LENGTH_LONG).show()
-            dialog.dismiss()
+            Toast.makeText(this, "Tekan menu titik tiga di kanan atas -> Izinkan setelan terbatas", Toast.LENGTH_LONG).show()
         }
 
-        // 2. Tombol Akses Notifikasi
-        sheetBinding.btnMenuNotifAccess.setOnClickListener {
+        // B. Tombol Pengaturan Akses Notifikasi
+        binding.btnMenuNotifAccess.setOnClickListener {
             PermissionHelper.openNotificationAccessSettings(this)
-            dialog.dismiss()
         }
 
-        // 3. Filter Switches
-        sheetBinding.sheetSwitchWA.setOnCheckedChangeListener { _, isChecked ->
+        // C. Saklar Filter Aplikasi
+        binding.switchWA.setOnCheckedChangeListener { _, isChecked ->
             appFilterManager.isWhatsAppEnabled = isChecked
         }
-        sheetBinding.sheetSwitchTelegram.setOnCheckedChangeListener { _, isChecked ->
+        binding.switchTelegram.setOnCheckedChangeListener { _, isChecked ->
             appFilterManager.isTelegramEnabled = isChecked
         }
-        sheetBinding.sheetSwitchSMS.setOnCheckedChangeListener { _, isChecked ->
+        binding.switchSMS.setOnCheckedChangeListener { _, isChecked ->
             appFilterManager.isSmsEnabled = isChecked
         }
-        sheetBinding.sheetSwitchIG.setOnCheckedChangeListener { _, isChecked ->
+        binding.switchIG.setOnCheckedChangeListener { _, isChecked ->
             appFilterManager.isInstagramEnabled = isChecked
         }
 
-        // 4. Pindai Ulang Bluetooth
-        sheetBinding.btnMenuRescanBle.setOnClickListener {
+        // D. Tombol Pindai Ulang Bluetooth ESP32
+        binding.btnMenuRescanBle.setOnClickListener {
             if (PermissionHelper.hasAllRuntimePermissions(this)) {
                 bleManager.disconnect()
                 bleManager.startScanAndConnect()
@@ -198,10 +199,14 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener {
             } else {
                 requestPermissionLauncher.launch(PermissionHelper.getRequiredPermissions())
             }
-            dialog.dismiss()
         }
+    }
 
-        dialog.show()
+    private fun syncSettingSwitches() {
+        binding.switchWA.isChecked = appFilterManager.isWhatsAppEnabled
+        binding.switchTelegram.isChecked = appFilterManager.isTelegramEnabled
+        binding.switchSMS.isChecked = appFilterManager.isSmsEnabled
+        binding.switchIG.isChecked = appFilterManager.isInstagramEnabled
     }
 
     private fun checkAndRequestPermissions() {

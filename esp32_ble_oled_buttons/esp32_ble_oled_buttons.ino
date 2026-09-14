@@ -5,11 +5,18 @@
  * MCU     : ESP32-C3 SuperMini
  * ===================================================================================
  * 
- * PINOUT SKEMATIK ESP32-C3:
+ * PINOUT SKEMATIK ESP32-C3 SUPERMINI:
  * - OLED SDA -> GPIO 8
  * - OLED SCL -> GPIO 9
  * - Tombol B1 (Next / Geser)  -> GPIO 4 & GND
  * - Tombol B2 (OK / Kembali)  -> GPIO 3 & GND
+ * ===================================================================================
+ * FITUR UTAMA:
+ * 1. Bluetooth TIDAK aktif saat boot (Standby hemat daya [OFF]).
+ * 2. Bluetooth dinyalakan ON-DEMAND via Menu: "1. Sambung Android" atau "2. Sambung iOS".
+ * 3. Menu "3. Putus / Matikan BLE" untuk memutuskan HP & menonaktifkan Bluetooth.
+ * 4. Kompatibel penuh dengan aplikasi Android (Nordic UART Service) & iOS tanpa security bonding
+ *    sehingga koneksi instan dan bebas error GATT 133 / unpair mismatch.
  * ===================================================================================
  */
 
@@ -20,7 +27,6 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
-#include <BLESecurity.h>
 
 // --- PIN DEFINISI ESP32-C3 SUPERMINI ---
 #define OLED_SDA_PIN    8   // GPIO 8
@@ -47,9 +53,8 @@ BLECharacteristic* pRxCharacteristic = NULL;
 BLEAdvertising* pAdv = NULL;
 
 bool bleInitialized = false;
-bool bleActive = false;           // Bluetooth mati saat awal booting
+bool bleActive = false;           // Default: Bluetooth MATI saat awal booting
 bool deviceConnected = false;
-bool oldDeviceConnected = false;
 
 enum TargetOS {
   OS_NONE,
@@ -83,12 +88,12 @@ enum ScreenState {
 ScreenState currentState = STATE_STANDBY;
 ScreenState lastState = STATE_STANDBY;
 
-// Menu Lengkap (Termasuk Pilihan Sambung Android / iOS)
+// Menu Navigasi
 const int MENU_TOTAL = 6;
 const char* menuItems[MENU_TOTAL] = {
   "1. Sambung Android",
-  "2. Sambung iOS (iPhone)",
-  "3. Matikan Bluetooth",
+  "2. Sambung iOS",
+  "3. Putus / Matikan BLE",
   "4. Riwayat Pesan",
   "5. Hapus Semua Pesan",
   "6. Status Perangkat"
@@ -121,19 +126,24 @@ void sendBLE(String msg);
 
 // --- CALLBACK BLE SERVER ---
 class ServerCallbacks: public BLEServerCallbacks {
-  void onConnect(BLEServer* pServer) {
+  void onConnect(BLEServer* pServer) override {
     deviceConnected = true;
     Serial.println(F("[BLE] HP Terhubung!"));
   }
-  void onDisconnect(BLEServer* pServer) {
+  void onDisconnect(BLEServer* pServer) override {
     deviceConnected = false;
     Serial.println(F("[BLE] HP Terputus!"));
+    // HANYA pasang iklan (advertising) ulang jika Bluetooth masih dalam kondisi AKTIF
+    if (bleActive) {
+      pServer->startAdvertising();
+      Serial.println(F("[BLE] Siap menerima koneksi baru..."));
+    }
   }
 };
 
-// --- CALLBACK BLE RECEIVE (Karakteristik RX) ---
+// --- CALLBACK BLE RECEIVE (Karakteristik RX: HP -> ESP32) ---
 class ReceiveCallbacks: public BLECharacteristicCallbacks {
-  void onWrite(BLECharacteristic *pCharacteristic) {
+  void onWrite(BLECharacteristic *pCharacteristic) override {
     size_t len = pCharacteristic->getLength();
     uint8_t* data = pCharacteristic->getData();
     if (len > 0 && data != nullptr) {
@@ -153,17 +163,11 @@ class ReceiveCallbacks: public BLECharacteristicCallbacks {
   }
 };
 
-// Inisialisasi Stack BLE (tanpa langsung menyalakan advertising)
+// Inisialisasi Stack BLE (Bebas dari enkripsi/bonding agar tidak ada error pairing)
 void initBLEStack() {
   if (bleInitialized) return;
 
   BLEDevice::init(BLE_DEVICE_NAME);
-  BLEDevice::setMTU(517);
-
-  // Security bonding untuk kestabilan pairing Android & iPhone
-  BLESecurity *pSecurity = new BLESecurity();
-  pSecurity->setAuthenticationMode(ESP_LE_AUTH_BOND);
-  pSecurity->setCapability(ESP_IO_CAP_NONE);
 
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new ServerCallbacks());
@@ -186,6 +190,7 @@ void initBLEStack() {
 
   pService->start();
 
+  // Pengaturan Advertising Aman (< 31 bytes per paket payload)
   pAdv = BLEDevice::getAdvertising();
   pAdv->addServiceUUID(SERVICE_UUID);
   pAdv->setScanResponse(true);
@@ -193,36 +198,48 @@ void initBLEStack() {
   pAdv->setMinPreferred(0x12);
 
   bleInitialized = true;
+  Serial.println(F("[BLE] Stack BLE siap digunakan."));
 }
 
-// Menyalakan Bluetooth secara On-Demand berdasarkan pilihan Android / iOS
+// Menyalakan Bluetooth secara On-Demand
 void startBLE(TargetOS target) {
   initBLEStack();
 
   currentTargetOS = target;
   bleActive = true;
-  oldDeviceConnected = false;
 
-  pAdv->start();
+  if (pAdv != NULL) {
+    pAdv->start();
+  } else {
+    BLEDevice::startAdvertising();
+  }
+
   Serial.print(F("[BLE] Bluetooth AKTIF - Mode: "));
   Serial.println(target == OS_ANDROID ? F("Android") : F("iOS (iPhone)"));
 }
 
-// Mematikan Bluetooth
+// Mematikan Bluetooth & Memutus Koneksi HP
 void stopBLE() {
   if (bleActive) {
+    bleActive = false;
+
+    // 1. Hentikan pemancaran sinyal (advertising)
     if (pAdv != NULL) {
       pAdv->stop();
     }
-    bleActive = false;
+
+    // 2. Putus koneksi HP jika sedang tersambung
+    if (deviceConnected && pServer != NULL) {
+      pServer->disconnect(pServer->getConnId());
+    }
+
     deviceConnected = false;
-    oldDeviceConnected = false;
     currentTargetOS = OS_NONE;
-    Serial.println(F("[BLE] Bluetooth DINONAKTIFKAN"));
+    Serial.println(F("[BLE] Bluetooth DINONAKTIFKAN (OFF)"));
   }
 }
 
-// Tampilan pesan konfirmasi cepat
+// Tampilan pesan konfirmasi pop-up cepat (Toast)
 void showStatusToast(const char* line1, const char* line2, int delayMs) {
   display.clearDisplay();
   display.drawRect(0, 0, 128, 64, SSD1306_WHITE);
@@ -315,43 +332,33 @@ void setup() {
     }
   }
 
-  // Tampilan Splash Screen Bersih
+  // Tampilan Splash Screen
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
   display.setTextSize(1);
-  display.setCursor(22, 18);
+  display.setCursor(20, 18);
   display.print(F("ESP32-C3 NOTIF"));
-  display.drawLine(22, 30, 106, 30, SSD1306_WHITE);
+  display.drawLine(20, 30, 108, 30, SSD1306_WHITE);
   display.setCursor(24, 38);
   display.print(F("Sistem Siap..."));
   display.display();
   delay(1000);
 
-  // CATATAN: Bluetooth TIDAK langsung dinyalakan saat boot!
+  // CATATAN: Bluetooth TIDAK dinyalakan saat boot!
   // Pengguna menyalakan Bluetooth lewat Menu -> Sambung Android / iOS.
+  bleActive = false;
+  deviceConnected = false;
   Serial.println(F("[SISTEM] Boot selesai. Bluetooth OFF (Pilih Sambung di Menu)."));
 }
 
 // --- LOOP UTAMA ---
 void loop() {
-  // Re-connect BLE Advertising jika terputus (hanya jika BLE dalam keadaan aktif)
-  if (bleActive) {
-    if (!deviceConnected && oldDeviceConnected) {
-      delay(200);
-      if (pAdv != NULL) pAdv->start();
-      oldDeviceConnected = deviceConnected;
-    }
-    if (deviceConnected && !oldDeviceConnected) {
-      oldDeviceConnected = deviceConnected;
-    }
-  }
-
   // Auto-dismiss popup notifikasi setelah batas waktu
   if (currentState == STATE_POPUP && (millis() - popupTimer > POPUP_TIMEOUT)) {
     currentState = (lastState == STATE_POPUP) ? STATE_STANDBY : lastState;
   }
 
-  // --- PEMBACAAN TOMBOL 1 (B1 - GPIO 4: Next / Geser) ---
+  // --- PEMBACAAN TOMBOL 1 (B1 - GPIO 4: Next / Geser / Scroll) ---
   if (digitalRead(BTN1_PIN) == LOW) {
     if (millis() - lastBtn1Time > DEBOUNCE_DELAY) {
       lastBtn1Time = millis();
@@ -387,7 +394,7 @@ void loop() {
     }
   }
 
-  // --- PEMBACAAN TOMBOL 2 (B2 - GPIO 3: OK / Kembali / Tutup) ---
+  // --- PEMBACAAN TOMBOL 2 (B2 - GPIO 3: OK / Kembali / Pilih / Tutup) ---
   if (digitalRead(BTN2_PIN) == LOW) {
     if (millis() - lastBtn2Time > DEBOUNCE_DELAY) {
       lastBtn2Time = millis();
@@ -419,13 +426,13 @@ void loop() {
         // 2. Sambung iOS (iPhone)
         else if (currentMenuIdx == 1) {
           startBLE(OS_IOS);
-          showStatusToast("Bluetooth AKTIF", "Mode: iOS (iPhone)", 1000);
+          showStatusToast("Bluetooth AKTIF", "Mode: iOS", 1000);
           currentState = STATE_STANDBY;
         }
-        // 3. Matikan Bluetooth
+        // 3. Putus / Matikan Bluetooth
         else if (currentMenuIdx == 2) {
           stopBLE();
-          showStatusToast("Bluetooth MATI", "Mode Standby", 900);
+          showStatusToast("Bluetooth MATI", "Koneksi Diputus", 1000);
           currentState = STATE_STANDBY;
         }
         // 4. Riwayat Pesan
@@ -460,7 +467,7 @@ void loop() {
 // DESAIN TAMPILAN OLED (MINIMALIS, BERSIH, MUDAH DIBACA)
 // ===================================================================================
 
-// Header Status Bar Bersih
+// Header Status Bar
 void drawTopBar(const char* title, bool showBadge) {
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
@@ -535,23 +542,27 @@ void drawStandby() {
 
   if (notifCount == 0) {
     if (!bleActive) {
-      display.setCursor(8, 20);
-      display.print(F("Bluetooth: OFF"));
-      display.setCursor(0, 34);
-      display.print(F("Tekan B2 utk Sambung"));
+      display.setCursor(8, 18);
+      display.print(F("Bluetooth: NONAKTIF"));
+      display.setCursor(4, 30);
+      display.print(F("Tekan B2 utk Menu"));
+      display.setCursor(4, 41);
+      display.print(F("Pilih Sambung HP"));
     } else if (deviceConnected) {
       display.setCursor(8, 20);
       display.print(F("HP Terhubung"));
       display.setCursor(0, 34);
       display.print(F("Siap terima notifikasi"));
     } else {
-      display.setCursor(8, 20);
+      display.setCursor(8, 18);
       display.print(F("Mencari HP..."));
-      display.setCursor(0, 34);
+      display.setCursor(0, 30);
+      display.print(F("Nama: ESP32-SmartNotif"));
+      display.setCursor(0, 41);
       if (currentTargetOS == OS_ANDROID) {
         display.print(F("Target: Android"));
       } else if (currentTargetOS == OS_IOS) {
-        display.print(F("Target: iPhone (iOS)"));
+        display.print(F("Target: iOS (iPhone)"));
       } else {
         display.print(F("Mode Standby"));
       }
@@ -671,11 +682,26 @@ void drawNotifDetail() {
   if (sender.length() > 21) sender = sender.substring(0, 18) + "...";
   display.print(sender);
 
-  // Pesan Utuh
+  // Pesan Utuh (hingga 3 baris terpotong rapi)
   display.setCursor(0, 24);
   String msg = n.message;
-  if (msg.length() > 60) msg = msg.substring(0, 57) + "...";
-  display.print(msg);
+  if (msg.length() <= 21) {
+    display.print(msg);
+  } else if (msg.length() <= 42) {
+    display.println(msg.substring(0, 21));
+    display.setCursor(0, 34);
+    display.print(msg.substring(21));
+  } else {
+    display.println(msg.substring(0, 21));
+    display.setCursor(0, 34);
+    display.println(msg.substring(21, 42));
+    display.setCursor(0, 44);
+    if (msg.length() > 63) {
+      display.print(msg.substring(42, 60) + "..");
+    } else {
+      display.print(msg.substring(42));
+    }
+  }
 
   drawBottomBar("B1:Next", "B2:Kembali");
 }
