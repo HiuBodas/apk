@@ -33,9 +33,8 @@ jobs:
       - name: Build Debug APK
         working-directory: ./android_app
         run: |
-          chmod +x ./gradlew
           set -o pipefail
-          ./gradlew assembleDebug --stacktrace 2>&1 | tee build_output.log
+          gradle assembleDebug --stacktrace 2>&1 | tee build_output.log
 
       - name: Report Build Output to Job Summary
         if: always()
