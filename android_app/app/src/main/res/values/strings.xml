@@ -23,6 +23,16 @@
     <string name="hint_test_msg">Isi Pesan (Cth: Halo bro apa kabar?)</string>
     <string name="btn_send_test">Kirim ke OLED ESP32</string>
 
+    <!-- 4 Box Panel Menu Utama Pengujian -->
+    <string name="panel_title_test_notif">1. Uji Notifikasi Chat / Pesan</string>
+    <string name="panel_sub_test_notif">Format: [WA] Pengirim: Pesan</string>
+    <string name="panel_title_test_time">2. Uji Waktu &amp; Baterai (Tes Time)</string>
+    <string name="panel_sub_test_time">Format: [TIME] HH:mm:ss|dd/MM/yyyy|Hari|Baterai%</string>
+    <string name="panel_title_test_weather">3. Uji Prakiraan Cuaca (Tes Weath)</string>
+    <string name="panel_sub_test_weather">Format: [WEATHER] Kota|Suhu|Icon|Max|Min|UV|Tekanan</string>
+    <string name="panel_title_test_nav">4. Uji Navigasi Google Maps (Tes Nav)</string>
+    <string name="panel_sub_test_nav">Format: [NAV] Instruksi|Jarak|ETA|1</string>
+
     <string name="title_live_logs">Log Real-Time Notifikasi</string>
     <string name="logs_empty">Belum ada notifikasi yang diteruskan.</string>
 

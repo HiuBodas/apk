@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.esp32.smartnotif.ble.BleManager
@@ -96,6 +97,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
         checkNotificationAccess()
         syncSettingSwitches()
         updateSettingBleDeviceCard()
+        updateTestPreviews()
 
         // Otomatis hubungkan jika sedang terputus
         if (bleManager.currentState == BleManager.ConnectionState.DISCONNECTED &&
@@ -136,6 +138,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
         // Sinkronisasi awal saklar setting & kartu BLE
         syncSettingSwitches()
         updateSettingBleDeviceCard()
+        updateTestPreviews()
     }
 
     private fun setupListeners() {
@@ -158,7 +161,11 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
             }
         }
 
-        // 2. Tombol Kirim Tes Notifikasi di Menu Utama
+        // ----------------------------------------------------
+        // 2. Kontrol 4 Box Panel Menu Utama Pengujian
+        // ----------------------------------------------------
+
+        // Box Panel 1: Uji Notifikasi Pesan / Chat
         binding.btnSendTest.setOnClickListener {
             val sender = binding.etTestSender.text?.toString()?.trim() ?: "Pengirim"
             val msg = binding.etTestMessage.text?.toString()?.trim() ?: ""
@@ -178,21 +185,23 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
             Toast.makeText(this, "Pesan dikirim ke ESP32", Toast.LENGTH_SHORT).show()
         }
 
-        // Tes Sinkronisasi Jam & Baterai HP [TIME]
+        // Box Panel 2: Uji Sinkronisasi Jam & Baterai HP (Tes Time)
         binding.btnTestSyncTime.setOnClickListener {
             val payload = DeviceSyncHelper.buildTimeBatteryPayload(this)
+            binding.tvTimeBatteryPreview.text = payload
             bleManager.sendData(payload)
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
             addLogItem(NotifLogItem("TIME", "Sinkronisasi Jam HP", payload, timeFormat.format(Date())))
             Toast.makeText(this, "Terkirim: $payload", Toast.LENGTH_SHORT).show()
         }
 
-        // Tes Sinkronisasi Cuaca Open-Meteo [WEATHER]
+        // Box Panel 3: Uji Prakiraan Cuaca Open-Meteo (Tes Weath) - Live GPS
         binding.btnTestSyncWeather.setOnClickListener {
             Toast.makeText(this, "Mengambil data cuaca Open-Meteo...", Toast.LENGTH_SHORT).show()
             lifecycleScope.launch {
                 val payload = WeatherManager.fetchWeatherPayload(this@MainActivity)
                 if (payload != null) {
+                    binding.tvWeatherPreview.text = payload
                     bleManager.sendData(payload)
                     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
                     addLogItem(NotifLogItem("WEATHER", "Cuaca Terkini", payload, timeFormat.format(Date())))
@@ -203,13 +212,36 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
             }
         }
 
-        // Tes Navigasi Google Maps [NAV]
-        binding.btnTestNav.setOnClickListener {
-            val sampleNav = "[NAV] Jl. Sudirman|200 m|15 mnt|1"
-            bleManager.sendData(sampleNav)
+        // Box Panel 3: Uji Prakiraan Cuaca - Sample Cepat Offline
+        binding.btnTestSampleWeather.setOnClickListener {
+            val sampleWeather = "[WEATHER] Jakarta|30|1|33|24|6|1012"
+            binding.tvWeatherPreview.text = sampleWeather
+            bleManager.sendData(sampleWeather)
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-            addLogItem(NotifLogItem("NAV", "Google Maps (Tes)", sampleNav, timeFormat.format(Date())))
-            Toast.makeText(this, "Terkirim: $sampleNav", Toast.LENGTH_SHORT).show()
+            addLogItem(NotifLogItem("WEATHER", "Cuaca Sample (Offline)", sampleWeather, timeFormat.format(Date())))
+            Toast.makeText(this, "Terkirim Sample Cuaca: $sampleWeather", Toast.LENGTH_SHORT).show()
+        }
+
+        // Box Panel 4: Uji Navigasi Google Maps (Tes Nav)
+        binding.etNavInstruction.doAfterTextChanged { updateNavPreview() }
+        binding.etNavDistance.doAfterTextChanged { updateNavPreview() }
+        binding.etNavEta.doAfterTextChanged { updateNavPreview() }
+
+        binding.btnTestNav.setOnClickListener {
+            val navPayload = updateNavPreview()
+            bleManager.sendData(navPayload)
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            addLogItem(NotifLogItem("NAV", "Google Maps (Tes)", navPayload, timeFormat.format(Date())))
+            Toast.makeText(this, "Terkirim: $navPayload", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.btnTestNavStop.setOnClickListener {
+            val stopPayload = "[NAV] STOP"
+            binding.tvNavPreview.text = stopPayload
+            bleManager.sendData(stopPayload)
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            addLogItem(NotifLogItem("NAV", "Google Maps (Stop)", stopPayload, timeFormat.format(Date())))
+            Toast.makeText(this, "Navigasi Dihentikan: $stopPayload", Toast.LENGTH_SHORT).show()
         }
 
         // 3. Hapus Log di Menu Utama
@@ -291,6 +323,34 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
         binding.switchTelegram.isChecked = appFilterManager.isTelegramEnabled
         binding.switchSMS.isChecked = appFilterManager.isSmsEnabled
         binding.switchIG.isChecked = appFilterManager.isInstagramEnabled
+    }
+
+    private fun updateTestPreviews() {
+        // 1. Preview Waktu & Baterai
+        val timePayload = DeviceSyncHelper.buildTimeBatteryPayload(this)
+        binding.tvTimeBatteryPreview.text = timePayload
+
+        // 2. Preview Cuaca (dari cache atau default)
+        val savedWeather = WeatherManager.getLastSavedPayload(this)
+        binding.tvWeatherPreview.text = savedWeather ?: "[WEATHER] Jakarta|30|1|33|24|6|1012"
+
+        // 3. Preview Navigasi
+        updateNavPreview()
+    }
+
+    private fun updateNavPreview(): String {
+        val instruction = binding.etNavInstruction.text?.toString()?.trim().let {
+            if (it.isNullOrEmpty()) "Belok Kanan Jl. Sudirman" else it.replace("|", "-")
+        }
+        val distance = binding.etNavDistance.text?.toString()?.trim().let {
+            if (it.isNullOrEmpty()) "200 m" else it.replace("|", "-")
+        }
+        val eta = binding.etNavEta.text?.toString()?.trim().let {
+            if (it.isNullOrEmpty()) "15 mnt" else it.replace("|", "-")
+        }
+        val payload = "[NAV] $instruction|$distance|$eta|1"
+        binding.tvNavPreview.text = payload
+        return payload
     }
 
     private fun checkAndRequestPermissions() {

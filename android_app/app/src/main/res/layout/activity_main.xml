@@ -224,7 +224,9 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- KARTU TES KIRIM PESAN MANUAL -->
+                <!-- ========================================== -->
+                <!-- 1. BOX PANEL: UJI NOTIFIKASI CHAT / PESAN  -->
+                <!-- ========================================== -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -234,14 +236,43 @@
                     android:padding="18dp"
                     android:layout_marginBottom="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/title_test_send"
-                        android:textColor="@color/text_muted"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="10dp" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_notifications_active"
+                            app:tint="@color/primary"
+                            android:contentDescription="Uji Notifikasi" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/panel_title_test_notif"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13.5sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/panel_sub_test_notif"
+                                android:textColor="@color/text_muted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
@@ -302,6 +333,303 @@
                         app:iconGravity="textStart"
                         app:cornerRadius="14dp"
                         app:backgroundTint="@color/primary" />
+                </LinearLayout>
+
+                <!-- ========================================== -->
+                <!-- 2. BOX PANEL: UJI WAKTU & BATERAI (TES TIME) -->
+                <!-- ========================================== -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:elevation="4dp"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_time"
+                            app:tint="@color/primary"
+                            android:contentDescription="Uji Waktu dan Baterai" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/panel_title_test_time"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13.5sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/panel_sub_test_time"
+                                android:textColor="@color/text_muted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Preview Container Floating -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_card_floating"
+                        android:elevation="2dp"
+                        android:padding="12dp"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Payload Jam &amp; Baterai HP Terkini:"
+                            android:textColor="@color/text_muted"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvTimeBatteryPreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="[TIME] --:--:--|--/--/----|--|--%"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12.5sp"
+                            android:fontFamily="monospace"
+                            android:textStyle="bold"
+                            android:layout_marginTop="4dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Menyinkronkan waktu HP, tanggal, nama hari, dan level baterai ke jam digital OLED ESP32."
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestSyncTime"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="KIRIM SINKRONISASI JAM &amp; BATERAI"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        app:icon="@drawable/ic_refresh"
+                        app:iconGravity="textStart"
+                        app:cornerRadius="14dp"
+                        app:backgroundTint="@color/primary" />
+                </LinearLayout>
+
+                <!-- ========================================== -->
+                <!-- 3. BOX PANEL: UJI CUACA (TES WEATH)       -->
+                <!-- ========================================== -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:elevation="4dp"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_weather"
+                            app:tint="@color/primary"
+                            android:contentDescription="Uji Cuaca" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/panel_title_test_weather"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13.5sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/panel_sub_test_weather"
+                                android:textColor="@color/text_muted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Preview Container Floating -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_card_floating"
+                        android:elevation="2dp"
+                        android:padding="12dp"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Payload Cuaca Terkini / Tersimpan:"
+                            android:textColor="@color/text_muted"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvWeatherPreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="[WEATHER] Jakarta|30|1|33|24|6|1012"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12.5sp"
+                            android:fontFamily="monospace"
+                            android:textStyle="bold"
+                            android:layout_marginTop="4dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Diambil otomatis via Open-Meteo API gratis sesuai koordinat GPS atau lokasi tersimpan."
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestSyncWeather"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="AMBIL &amp; KIRIM CUACA LIVE (GPS)"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        app:icon="@drawable/ic_refresh"
+                        app:iconGravity="textStart"
+                        app:cornerRadius="14dp"
+                        app:backgroundTint="@color/primary" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestSampleWeather"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="8dp"
+                        android:text="KIRIM SAMPLE CUACA (OFFLINE)"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        app:icon="@drawable/ic_send"
+                        app:iconTint="@color/text_primary"
+                        app:iconGravity="textStart"
+                        app:cornerRadius="12dp"
+                        app:strokeColor="@color/card_stroke"
+                        app:strokeWidth="1dp"
+                        app:backgroundTint="@color/card_bg_elevated"
+                        android:elevation="2dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp" />
+                </LinearLayout>
+
+                <!-- ========================================== -->
+                <!-- 4. BOX PANEL: UJI NAVIGASI GOOGLE MAPS    -->
+                <!-- ========================================== -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card"
+                    android:elevation="4dp"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_navigation"
+                            app:tint="@color/primary"
+                            android:contentDescription="Uji Navigasi" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/panel_title_test_nav"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13.5sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/panel_sub_test_nav"
+                                android:textColor="@color/text_muted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Instruksi Belokan / Jalan"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxBackgroundColor="@color/card_bg_elevated"
+                        app:boxStrokeColor="@color/card_stroke"
+                        app:hintTextColor="@color/text_secondary"
+                        android:textColorHint="@color/text_muted">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etNavInstruction"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp"
+                            android:text="Belok Kanan Jl. Sudirman"
+                            android:singleLine="true" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -309,58 +637,119 @@
                         android:orientation="horizontal"
                         android:layout_marginTop="10dp">
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnTestSyncTime"
+                        <com.google.android.material.textfield.TextInputLayout
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:text="Tes [TIME]"
-                            android:textColor="@color/text_primary"
-                            android:textSize="11sp"
-                            app:cornerRadius="12dp"
-                            app:strokeColor="@color/card_stroke"
-                            app:strokeWidth="1dp"
-                            app:backgroundTint="@color/card_bg_elevated"
-                            android:elevation="2dp"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp" />
+                            android:layout_marginEnd="6dp"
+                            android:hint="Jarak (Cth: 200 m)"
+                            app:boxCornerRadiusTopStart="12dp"
+                            app:boxCornerRadiusTopEnd="12dp"
+                            app:boxCornerRadiusBottomStart="12dp"
+                            app:boxCornerRadiusBottomEnd="12dp"
+                            app:boxBackgroundColor="@color/card_bg_elevated"
+                            app:boxStrokeColor="@color/card_stroke"
+                            app:hintTextColor="@color/text_secondary"
+                            android:textColorHint="@color/text_muted">
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnTestSyncWeather"
-                            android:layout_width="0dp"
-                            android:layout_height="40dp"
-                            android:layout_weight="1"
-                            android:layout_marginStart="4dp"
-                            android:layout_marginEnd="4dp"
-                            android:text="Tes [WEATHER]"
-                            android:textColor="@color/text_primary"
-                            android:textSize="11sp"
-                            app:cornerRadius="12dp"
-                            app:strokeColor="@color/card_stroke"
-                            app:strokeWidth="1dp"
-                            app:backgroundTint="@color/card_bg_elevated"
-                            android:elevation="2dp"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp" />
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etNavDistance"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13sp"
+                                android:text="200 m"
+                                android:singleLine="true" />
+                        </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnTestNav"
+                        <com.google.android.material.textfield.TextInputLayout
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="4dp"
-                            android:text="Tes [NAV]"
-                            android:textColor="@color/text_primary"
-                            android:textSize="11sp"
-                            app:cornerRadius="12dp"
-                            app:strokeColor="@color/card_stroke"
-                            app:strokeWidth="1dp"
-                            app:backgroundTint="@color/card_bg_elevated"
-                            android:elevation="2dp"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp" />
+                            android:layout_marginStart="6dp"
+                            android:hint="ETA (Cth: 15 mnt)"
+                            app:boxCornerRadiusTopStart="12dp"
+                            app:boxCornerRadiusTopEnd="12dp"
+                            app:boxCornerRadiusBottomStart="12dp"
+                            app:boxCornerRadiusBottomEnd="12dp"
+                            app:boxBackgroundColor="@color/card_bg_elevated"
+                            app:boxStrokeColor="@color/card_stroke"
+                            app:hintTextColor="@color/text_secondary"
+                            android:textColorHint="@color/text_muted">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etNavEta"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/text_primary"
+                                android:textSize="13sp"
+                                android:text="15 mnt"
+                                android:singleLine="true" />
+                        </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
+
+                    <!-- Preview Container Floating -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_card_floating"
+                        android:elevation="2dp"
+                        android:padding="12dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Preview Payload Navigasi:"
+                            android:textColor="@color/text_muted"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvNavPreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="[NAV] Belok Kanan Jl. Sudirman|200 m|15 mnt|1"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12.5sp"
+                            android:fontFamily="monospace"
+                            android:textStyle="bold"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestNav"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="KIRIM PANDUAN NAVIGASI [NAV]"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        app:icon="@drawable/ic_navigation"
+                        app:iconGravity="textStart"
+                        app:cornerRadius="14dp"
+                        app:backgroundTint="@color/primary" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestNavStop"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="8dp"
+                        android:text="KIRIM NAVIGASI STOP [NAV] STOP"
+                        android:textColor="@color/status_disconnected"
+                        android:textSize="12sp"
+                        app:icon="@drawable/ic_stop"
+                        app:iconTint="@color/status_disconnected"
+                        app:iconGravity="textStart"
+                        app:cornerRadius="12dp"
+                        app:strokeColor="@color/status_disconnected"
+                        app:strokeWidth="1dp"
+                        app:backgroundTint="@color/card_bg_elevated"
+                        android:elevation="2dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp" />
                 </LinearLayout>
 
                 <!-- KARTU LOG NOTIFIKASI REAL-TIME -->
@@ -569,7 +958,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="1. Di halaman Akses Notifikasi, ketuk saklar ESP32 Smart Notif hingga muncul dialog Setelan Terbatas, lalu tekan OK.\n2. Buka Pengaturan HP -> Aplikasi -> Lihat semua aplikasi -> ESP32 Smart Notif.\n3. Tekan tombol titik tiga di pojok kanan atas, lalu pilih Izinkan setelan terbatas.\n4. Kembali ke Akses Notifikasi dan aktifkan saklarnya."
+                            android:text="1. Di halaman Akses Notifikasi, ketuk saklar ESP32 Smart Notif hingga muncul dialog Setelan Terbatas, lalu tekan OK.\n2. Buka Pengaturan HP → Aplikasi → Lihat semua aplikasi → ESP32 Smart Notif.\n3. Tekan tombol titik tiga di pojok kanan atas, lalu pilih Izinkan setelan terbatas.\n4. Kembali ke Akses Notifikasi dan aktifkan saklarnya."
                             android:textColor="@color/text_secondary"
                             android:textSize="10.5sp"
                             android:lineSpacingExtra="2dp" />
