@@ -11,14 +11,18 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.esp32.smartnotif.MainActivity
 import com.esp32.smartnotif.R
 import com.esp32.smartnotif.ble.BleManager
+import com.esp32.smartnotif.utils.DeviceSyncHelper
+import com.esp32.smartnotif.utils.WeatherManager
 
 class BleForegroundService : Service(), BleManager.BleStateListener {
 
     companion object {
+        private const val TAG = "BleForegroundService"
         const val CHANNEL_ID = "esp32_smartnotif_service_channel"
         const val NOTIF_ID = 1001
         const val ACTION_DISCONNECT = "com.esp32.smartnotif.ACTION_DISCONNECT"
@@ -83,7 +87,11 @@ class BleForegroundService : Service(), BleManager.BleStateListener {
         if (!isBatteryReceiverRegistered) {
             try {
                 val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-                registerReceiver(batteryReceiver, filter)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    registerReceiver(batteryReceiver, filter, Context.RECEIVER_EXPORTED)
+                } else {
+                    registerReceiver(batteryReceiver, filter)
+                }
                 isBatteryReceiverRegistered = true
                 Log.d(TAG, "BatteryReceiver (ACTION_BATTERY_CHANGED) berhasil didaftarkan.")
             } catch (e: Exception) {

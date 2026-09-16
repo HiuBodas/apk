@@ -7,8 +7,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.OneTimeWorkRequest
+import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.esp32.smartnotif.ble.BleManager
@@ -33,7 +33,7 @@ class WeatherWorker(
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build()
 
-            val periodicRequest = PeriodicWorkRequestBuilder<WeatherWorker>(30, TimeUnit.MINUTES)
+            val periodicRequest = PeriodicWorkRequest.Builder(WeatherWorker::class.java, 30, TimeUnit.MINUTES)
                 .setConstraints(constraints)
                 .build()
 
@@ -53,7 +53,7 @@ class WeatherWorker(
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build()
 
-            val oneTimeRequest = OneTimeWorkRequestBuilder<WeatherWorker>()
+            val oneTimeRequest = OneTimeWorkRequest.Builder(WeatherWorker::class.java)
                 .setConstraints(constraints)
                 .build()
 
