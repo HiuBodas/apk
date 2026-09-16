@@ -41,6 +41,11 @@ jobs:
         run: |
           echo "### Gradle Build Log Output" >> $GITHUB_STEP_SUMMARY
           if [ -f "./android_app/build_output.log" ]; then
+            echo "#### Compiler Diagnostics:" >> $GITHUB_STEP_SUMMARY
+            echo '```text' >> $GITHUB_STEP_SUMMARY
+            grep -E "(e: |error: |FAILURE: |What went wrong:)" ./android_app/build_output.log | head -n 30 >> $GITHUB_STEP_SUMMARY || true
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "#### Tail Log:" >> $GITHUB_STEP_SUMMARY
             echo '```text' >> $GITHUB_STEP_SUMMARY
             tail -n 120 ./android_app/build_output.log >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
