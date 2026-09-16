@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.esp32.smartnotif.ble.BleManager
 import com.esp32.smartnotif.databinding.ActivityMainBinding
@@ -19,10 +20,14 @@ import com.esp32.smartnotif.model.BleDeviceItem
 import com.esp32.smartnotif.model.NotifLogItem
 import com.esp32.smartnotif.service.BleForegroundService
 import com.esp32.smartnotif.service.NotificationReceiverService
+import com.esp32.smartnotif.service.WeatherWorker
 import com.esp32.smartnotif.ui.BleDeviceAdapter
 import com.esp32.smartnotif.ui.LogAdapter
 import com.esp32.smartnotif.utils.AppFilterManager
+import com.esp32.smartnotif.utils.DeviceSyncHelper
 import com.esp32.smartnotif.utils.PermissionHelper
+import com.esp32.smartnotif.utils.WeatherManager
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -74,6 +79,9 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
         setupUI()
         setupListeners()
         checkAndRequestPermissions()
+
+        // Jadwalkan update cuaca berkala setiap 30-45 menit via WorkManager
+        WeatherWorker.schedulePeriodicWork(this)
 
         // Jika sudah dalam kondisi terhubung, pastikan Foreground Service tetap berjalan aktif
         if (bleManager.currentState == BleManager.ConnectionState.CONNECTED) {
@@ -168,6 +176,40 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
             addLogItem(NotifLogItem("WA", sender, msg, timeStr))
 
             Toast.makeText(this, "Pesan dikirim ke ESP32", Toast.LENGTH_SHORT).show()
+        }
+
+        // Tes Sinkronisasi Jam & Baterai HP [TIME]
+        binding.btnTestSyncTime.setOnClickListener {
+            val payload = DeviceSyncHelper.buildTimeBatteryPayload(this)
+            bleManager.sendData(payload)
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            addLogItem(NotifLogItem("TIME", "Sinkronisasi Jam HP", payload, timeFormat.format(Date())))
+            Toast.makeText(this, "Terkirim: $payload", Toast.LENGTH_SHORT).show()
+        }
+
+        // Tes Sinkronisasi Cuaca Open-Meteo [WEATHER]
+        binding.btnTestSyncWeather.setOnClickListener {
+            Toast.makeText(this, "Mengambil data cuaca Open-Meteo...", Toast.LENGTH_SHORT).show()
+            lifecycleScope.launch {
+                val payload = WeatherManager.fetchWeatherPayload(this@MainActivity)
+                if (payload != null) {
+                    bleManager.sendData(payload)
+                    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                    addLogItem(NotifLogItem("WEATHER", "Cuaca Terkini", payload, timeFormat.format(Date())))
+                    Toast.makeText(this@MainActivity, "Terkirim: $payload", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Gagal mengambil data cuaca", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        // Tes Navigasi Google Maps [NAV]
+        binding.btnTestNav.setOnClickListener {
+            val sampleNav = "[NAV] Jl. Sudirman|200 m|15 mnt|1"
+            bleManager.sendData(sampleNav)
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            addLogItem(NotifLogItem("NAV", "Google Maps (Tes)", sampleNav, timeFormat.format(Date())))
+            Toast.makeText(this, "Terkirim: $sampleNav", Toast.LENGTH_SHORT).show()
         }
 
         // 3. Hapus Log di Menu Utama

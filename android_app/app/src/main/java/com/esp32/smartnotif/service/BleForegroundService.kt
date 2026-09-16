@@ -49,12 +49,81 @@ class BleForegroundService : Service(), BleManager.BleStateListener {
     private var wakeLock: PowerManager.WakeLock? = null
     private lateinit var bleManager: BleManager
 
+    private var lastBatteryLevel: Int = -1
+    private var isBatteryReceiverRegistered = false
+
+    private val batteryReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == Intent.ACTION_BATTERY_CHANGED) {
+                val level = intent.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1)
+                val scale = intent.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1)
+                val pct = if (level >= 0 && scale > 0) (level * 100) / scale else -1
+                if (pct >= 0 && pct != lastBatteryLevel) {
+                    lastBatteryLevel = pct
+                    android.util.Log.d(TAG, "Persentase baterai HP diperbarui ke $pct%. Mengirimkan [TIME]...")
+                    sendTimeAndBatterySync(pct)
+                }
+            }
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         bleManager = BleManager.getInstance(this)
         bleManager.addListener(this)
         createNotificationChannel()
         acquireWakeLock()
+
+        if (bleManager.currentState == BleManager.ConnectionState.CONNECTED) {
+            onConnectedActions()
+        }
+    }
+
+    private fun registerBatteryReceiver() {
+        if (!isBatteryReceiverRegistered) {
+            try {
+                val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+                registerReceiver(batteryReceiver, filter)
+                isBatteryReceiverRegistered = true
+                Log.d(TAG, "BatteryReceiver (ACTION_BATTERY_CHANGED) berhasil didaftarkan.")
+            } catch (e: Exception) {
+                Log.e(TAG, "Gagal mendaftarkan batteryReceiver", e)
+            }
+        }
+    }
+
+    private fun unregisterBatteryReceiver() {
+        if (isBatteryReceiverRegistered) {
+            try {
+                unregisterReceiver(batteryReceiver)
+            } catch (_: Exception) {}
+            isBatteryReceiverRegistered = false
+            Log.d(TAG, "BatteryReceiver dilepas.")
+        }
+    }
+
+    private fun sendTimeAndBatterySync(batteryLevelOverride: Int? = null) {
+        if (bleManager.currentState == BleManager.ConnectionState.CONNECTED) {
+            val payload = com.esp32.smartnotif.utils.DeviceSyncHelper.buildTimeBatteryPayload(this, batteryLevelOverride)
+            Log.d(TAG, "Sinkronisasi Waktu & Baterai ke ESP32: $payload")
+            bleManager.sendData(payload)
+        }
+    }
+
+    private fun onConnectedActions() {
+        // 1. Sinkronisasi Jam & Baterai HP
+        lastBatteryLevel = com.esp32.smartnotif.utils.DeviceSyncHelper.getBatteryPercentage(this)
+        sendTimeAndBatterySync(lastBatteryLevel)
+        registerBatteryReceiver()
+
+        // 2. Sinkronisasi Cuaca Open-Meteo
+        val cachedWeather = com.esp32.smartnotif.utils.WeatherManager.getLastSavedPayload(this)
+        if (!cachedWeather.isNullOrEmpty()) {
+            Log.d(TAG, "Mengirimkan data cuaca cache ke ESP32: $cachedWeather")
+            bleManager.sendData(cachedWeather)
+        }
+        // Picu pengambilan data cuaca terbaru secara langsung
+        com.esp32.smartnotif.service.WeatherWorker.triggerImmediateSync(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -75,6 +144,10 @@ class BleForegroundService : Service(), BleManager.BleStateListener {
             )
         } else {
             startForeground(NOTIF_ID, notification)
+        }
+
+        if (bleManager.currentState == BleManager.ConnectionState.CONNECTED) {
+            onConnectedActions()
         }
 
         return START_STICKY
@@ -100,6 +173,7 @@ class BleForegroundService : Service(), BleManager.BleStateListener {
 
     override fun onStateChanged(state: BleManager.ConnectionState, message: String) {
         if (state == BleManager.ConnectionState.DISCONNECTED) {
+            unregisterBatteryReceiver()
             // Ketika Bluetooth diputus, hentikan service agar HP benar-benar masuk mode sleep!
             stopSelf()
         } else if (state == BleManager.ConnectionState.CONNECTED) {
@@ -107,6 +181,8 @@ class BleForegroundService : Service(), BleManager.BleStateListener {
             val notif = buildForegroundNotification("Terhubung ke $devName • Meneruskan notifikasi real-time")
             val manager = getSystemService(NotificationManager::class.java)
             manager?.notify(NOTIF_ID, notif)
+
+            onConnectedActions()
         }
     }
 
@@ -156,6 +232,7 @@ class BleForegroundService : Service(), BleManager.BleStateListener {
 
     override fun onDestroy() {
         super.onDestroy()
+        unregisterBatteryReceiver()
         bleManager.removeListener(this)
         releaseWakeLock()
     }

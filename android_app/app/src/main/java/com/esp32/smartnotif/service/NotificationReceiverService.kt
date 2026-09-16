@@ -23,6 +23,9 @@ class NotificationReceiverService : NotificationListenerService() {
 
         private var lastSentMessage = ""
         private var lastSentTimestamp = 0L
+
+        private var lastSentNavPayload = ""
+        private var lastSentNavTimestamp = 0L
     }
 
     private lateinit var appFilterManager: AppFilterManager
@@ -40,7 +43,16 @@ class NotificationReceiverService : NotificationListenerService() {
         // Abaikan notifikasi dari aplikasi ini sendiri
         if (packageName == applicationContext.packageName) return
 
-        // Periksa apakah aplikasi diizinkan lewat filter
+        // ================================================================
+        // FITUR 3: NAVIGASI GOOGLE MAPS
+        // Ditangani langsung secara terisolasi agar tidak mengganggu filter chat
+        // ================================================================
+        if (packageName == "com.google.android.apps.maps") {
+            handleGoogleMapsNavigation(sbn)
+            return
+        }
+
+        // Periksa apakah aplikasi diizinkan lewat filter (WhatsApp, Telegram, SMS, IG, dll)
         if (!appFilterManager.isPackageAllowed(packageName)) {
             return
         }
@@ -93,7 +105,87 @@ class NotificationReceiverService : NotificationListenerService() {
         sendBroadcast(intent)
     }
 
+    /**
+     * Memproses notifikasi belokan dari Google Maps:
+     * Format: [NAV] Instruksi Jalan|Jarak|ETA|1
+     */
+    private fun handleGoogleMapsNavigation(sbn: StatusBarNotification) {
+        val notification = sbn.notification ?: return
+        val extras = notification.extras ?: return
+
+        // 1. Instruksi belokan atau nama jalan (EXTRA_TITLE)
+        val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()?.trim() ?: ""
+
+        // 2. Jarak dan ETA (EXTRA_TEXT / EXTRA_SUB_TEXT)
+        val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()?.trim()
+            ?: extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()?.trim()
+            ?: ""
+        val subText = extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString()?.trim() ?: ""
+
+        if (title.isEmpty() && text.isEmpty()) return
+
+        val turnInstruction = if (title.isNotEmpty()) title.replace("|", "-") else "Navigasi"
+        var distance = "-"
+        var eta = "-"
+
+        if (text.isNotEmpty()) {
+            val parts = text.split(Regex("[·•\\|]")).map { it.trim() }.filter { it.isNotEmpty() }
+            if (parts.size >= 2) {
+                distance = parts[0]
+                eta = parts[1]
+            } else {
+                distance = text.replace("|", "-")
+                if (subText.isNotEmpty()) {
+                    eta = subText.replace("|", "-")
+                }
+            }
+        } else if (subText.isNotEmpty()) {
+            distance = subText.replace("|", "-")
+        }
+
+        val navPayload = "[NAV] $turnInstruction|$distance|$eta|1"
+
+        // Cegah spam update jika string navigasi sama persis
+        val currentTime = System.currentTimeMillis()
+        if (navPayload == lastSentNavPayload && (currentTime - lastSentNavTimestamp) < 1000) {
+            return
+        }
+
+        lastSentNavPayload = navPayload
+        lastSentNavTimestamp = currentTime
+
+        Log.d(TAG, "Meneruskan Navigasi Maps ke ESP32: $navPayload")
+        BleManager.getInstance(this).sendData(navPayload)
+
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val timeStr = timeFormat.format(Date())
+        val intent = Intent(ACTION_NEW_NOTIF_LOG).apply {
+            setPackage(applicationContext.packageName)
+            putExtra(EXTRA_APP_CODE, "NAV")
+            putExtra(EXTRA_SENDER, turnInstruction)
+            putExtra(EXTRA_MESSAGE, "$distance • $eta")
+            putExtra(EXTRA_TIME, timeStr)
+        }
+        sendBroadcast(intent)
+    }
+
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
-        // Tidak perlu aksi saat notifikasi dihapus
+        val packageName = sbn?.packageName ?: return
+        if (packageName == "com.google.android.apps.maps") {
+            Log.d(TAG, "Navigasi Google Maps ditutup. Mengirim: [NAV] STOP")
+            lastSentNavPayload = ""
+            BleManager.getInstance(this).sendData("[NAV] STOP")
+
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val timeStr = timeFormat.format(Date())
+            val intent = Intent(ACTION_NEW_NOTIF_LOG).apply {
+                setPackage(applicationContext.packageName)
+                putExtra(EXTRA_APP_CODE, "NAV")
+                putExtra(EXTRA_SENDER, "Google Maps")
+                putExtra(EXTRA_MESSAGE, "Navigasi Berhenti (STOP)")
+                putExtra(EXTRA_TIME, timeStr)
+            }
+            sendBroadcast(intent)
+        }
     }
 }

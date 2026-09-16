@@ -70,9 +70,16 @@ unsigned long lastBtn1Time = 0;
 unsigned long lastBtn2Time = 0;
 const unsigned long DEBOUNCE_DELAY = 220;
 
-// Timer Auto-dismiss Popup (10 detik)
+// Timer Auto-dismiss Popup & Durasi Dinamis
 unsigned long popupTimer = 0;
-const unsigned long POPUP_TIMEOUT = 10000;
+const unsigned long POPUP_TIMEOUT_DEFAULT = 10000;
+unsigned long currentPopupTimeout = POPUP_TIMEOUT_DEFAULT;
+
+// --- KONFIGURASI RUNNING TEXT (MARQUEE) NOTIFIKASI ---
+int popupScrollX = SCREEN_WIDTH;             // Posisi X teks berjalan (mulai dari sisi kanan layar)
+unsigned long lastPopupScrollTime = 0;       // Timer animasi pergeseran frame
+const unsigned long POPUP_SCROLL_SPEED = 20; // Kecepatan gerak (ms per piksel)
+const int POPUP_SCROLL_STEP = 1;             // Langkah piksel per geser (1px = sangat halus & bebas getar)
 
 // Forward Declarations UI
 void showStatusToast(const char* line1, const char* line2, int delayMs);
@@ -84,13 +91,15 @@ void drawNotifDetail();
 void drawMenu();
 void drawDeviceStatus();
 void parseMessage(String raw);
+String cleanText(String str);
 
-// Tampilan pesan konfirmasi pop-up cepat (Toast)
+// Tampilan pesan konfirmasi pop-up cepat (Toast - Latar Putih, Tulisan Hitam)
 void showStatusToast(const char* line1, const char* line2, int delayMs) {
-  display.clearDisplay();
-  display.drawRect(0, 0, 128, 64, SSD1306_WHITE);
+  display.fillScreen(SSD1306_WHITE);
+  display.drawRect(0, 0, 128, 64, SSD1306_BLACK);
+  display.drawRect(1, 1, 126, 62, SSD1306_BLACK);
   display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
+  display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
   display.setCursor(12, 20);
   display.print(line1);
   if (line2 != NULL && strlen(line2) > 0) {
@@ -99,6 +108,25 @@ void showStatusToast(const char* line1, const char* line2, int delayMs) {
   }
   display.display();
   delay(delayMs);
+}
+
+// Fungsi sanitasi teks untuk mencegah glitch font, karakter rusak, dan newline berantakan
+String cleanText(String str) {
+  String out = "";
+  for (unsigned int i = 0; i < str.length(); i++) {
+    char c = str[i];
+    // Hanya ambil karakter ASCII yang bisa dicetak (spasi 32 hingga ~ 126)
+    if (c >= 32 && c <= 126) {
+      out += c;
+    } else if (c == '\n' || c == '\r' || c == '\t') {
+      out += ' ';
+    }
+  }
+  out.trim();
+  while (out.indexOf("  ") >= 0) {
+    out.replace("  ", " ");
+  }
+  return out;
 }
 
 // Parser Pesan Notifikasi: Format [APP] Pengirim: Pesan
@@ -137,6 +165,14 @@ void parseMessage(String raw) {
     }
   }
 
+  // Bersihkan dari emoji dan byte non-ASCII agar font OLED tajam & bebas glitch
+  n.app = cleanText(n.app);
+  n.sender = cleanText(n.sender);
+  n.message = cleanText(n.message);
+
+  if (n.sender.length() == 0) n.sender = "Pemberitahuan";
+  if (n.message.length() == 0) n.message = "(Pesan Kosong)";
+
   // Geser riwayat pesan lama ke bawah
   for (int i = MAX_NOTIF - 1; i > 0; i--) {
     notifHistory[i] = notifHistory[i - 1];
@@ -149,6 +185,16 @@ void parseMessage(String raw) {
     lastState = currentState;
   }
   currentState = STATE_POPUP;
+
+  // Reset posisi teks berjalan ke sisi kanan layar agar meluncur ke kiri
+  popupScrollX = SCREEN_WIDTH;
+  lastPopupScrollTime = millis();
+
+  // Hitung durasi timeout popup secara dinamis agar pesan sempat terbaca tuntas
+  int textPixelWidth = n.message.length() * 12; // TextSize 2 = 12 piksel per karakter
+  unsigned long scrollDuration = (unsigned long)(textPixelWidth + SCREEN_WIDTH) * POPUP_SCROLL_SPEED / POPUP_SCROLL_STEP;
+  // Berikan durasi minimal 10 detik atau 1 putaran penuh + jeda 2.5 detik
+  currentPopupTimeout = max(POPUP_TIMEOUT_DEFAULT, scrollDuration + 2500UL);
   popupTimer = millis();
 }
 
@@ -156,10 +202,10 @@ void parseMessage(String raw) {
 // DESAIN TAMPILAN OLED (MINIMALIS, BERSIH, MUDAH DIBACA)
 // ===================================================================================
 
-// Header Status Bar
+// Header Status Bar (Latar Putih, Tulisan & Garis Hitam)
 void drawTopBar(const char* title, bool showBadge) {
   display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
+  display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
   display.setCursor(0, 0);
   display.print(title);
 
@@ -178,14 +224,14 @@ void drawTopBar(const char* title, bool showBadge) {
     display.print(notifCount);
     display.print(")");
   }
-  display.drawLine(0, 9, 127, 9, SSD1306_WHITE);
+  display.drawLine(0, 9, 127, 9, SSD1306_BLACK);
 }
 
-// Footer Navigasi Sederhana
+// Footer Navigasi Sederhana (Latar Putih, Tulisan & Garis Hitam)
 void drawBottomBar(const char* btn1Text, const char* btn2Text) {
-  display.drawLine(0, 53, 127, 53, SSD1306_WHITE);
+  display.drawLine(0, 53, 127, 53, SSD1306_BLACK);
   display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
+  display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
   display.setCursor(0, 56);
   display.print(btn1Text);
   if (btn2Text != NULL && strlen(btn2Text) > 0) {
@@ -195,12 +241,12 @@ void drawBottomBar(const char* btn1Text, const char* btn2Text) {
   }
 }
 
-// 1. LAYAR STANDBY / UTAMA
+// 1. LAYAR STANDBY / UTAMA (Latar Putih, Tulisan Hitam)
 void drawStandby() {
   drawTopBar("ESP32 NOTIF", true);
 
   display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
+  display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
 
   if (notifCount == 0) {
     if (!bleActive) {
@@ -250,7 +296,7 @@ void drawStandby() {
   }
 }
 
-// 2. POPUP NOTIFIKASI BARU (Tampilan Bersih & Terbaca)
+// 2. POPUP NOTIFIKASI BARU (High-Contrast: Background Putih, Tulisan Hitam, Font Pesan Besar)
 void drawPopup() {
   if (notifCount == 0) {
     currentState = STATE_STANDBY;
@@ -259,39 +305,54 @@ void drawPopup() {
 
   Notification n = notifHistory[0];
 
-  // Header Popup
+  // 1. Background PUTIH PENUH (High-Contrast Alert)
+  display.fillScreen(SSD1306_WHITE);
+
+  // 2. Header: Hitam di atas Putih
   display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 0);
+  display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
+  display.setCursor(2, 2);
   display.print(F("["));
   display.print(n.app);
   display.print(F("] "));
-  display.setCursor(88, 0);
-  display.print(F("*BARU*"));
-  display.drawLine(0, 9, 127, 9, SSD1306_WHITE);
 
-  // Pengirim
-  display.setCursor(0, 13);
-  String sender = "Dari: " + n.sender;
-  if (sender.length() > 21) sender = sender.substring(0, 18) + "...";
+  String sender = n.sender;
+  if (sender.length() > 14) sender = sender.substring(0, 12) + "..";
   display.print(sender);
 
-  // Isi Pesan (Lega tanpa garis pemotong)
-  display.setCursor(0, 25);
-  String msg = n.message;
-  if (msg.length() > 42) msg = msg.substring(0, 39) + "...";
-  display.print(msg);
+  // Garis pembatas Header
+  display.drawLine(0, 11, 127, 11, SSD1306_BLACK);
 
-  drawBottomBar("B1:Detail", "B2:Tutup");
+  // 3. Pesan Notifikasi: FONT BESAR (TextSize 2) - TEKS BERJALAN DARI KANAN KE KIRI
+  display.setTextSize(2);
+  display.setTextWrap(false); // Nonaktifkan wrap agar teks meluncur lurus ke samping kiri
+  display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
+
+  // Y=23: Tepat di tengah vertikal antara garis header (Y=11) dan garis footer (Y=50)
+  display.setCursor(popupScrollX, 23);
+  display.print(n.message);
+
+  display.setTextWrap(true); // Kembalikan ke wrap normal untuk layar lainnya
+
+  // 4. Garis pembatas Footer
+  display.drawLine(0, 50, 127, 50, SSD1306_BLACK);
+
+  // 5. Footer Navigasi Bawah (Hitam di atas Putih)
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
+  display.setCursor(2, 54);
+  display.print(F("B1:Detail"));
+  display.setCursor(76, 54);
+  display.print(F("B2:Tutup"));
 }
 
-// 3. DAFTAR RIWAYAT PESAN (Minimalis dengan Kursor)
+// 3. DAFTAR RIWAYAT PESAN (Latar Putih, Tulisan Hitam, Kursor Kontras)
 void drawNotifList() {
   drawTopBar("RIWAYAT", false);
 
   if (notifCount == 0) {
     display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE);
+    display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
     display.setCursor(18, 26);
     display.print(F("Belum ada pesan"));
     drawBottomBar("B1:Kembali", "B2:Menu");
@@ -301,11 +362,15 @@ void drawNotifList() {
   for (int i = 0; i < notifCount && i < 3; i++) {
     int y = 13 + (i * 13);
     display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, y);
     if (i == selectedNotif) {
+      // Highlight baris yang dipilih dengan balok hitam teks putih
+      display.fillRect(0, y - 1, 128, 11, SSD1306_BLACK);
+      display.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
+      display.setCursor(2, y);
       display.print(F("> "));
     } else {
+      display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
+      display.setCursor(2, y);
       display.print(F("  "));
     }
 
@@ -317,7 +382,7 @@ void drawNotifList() {
   drawBottomBar("B1:Pilih", "B2:Buka");
 }
 
-// 4. DETAIL PESAN
+// 4. DETAIL PESAN (Latar Putih, Tulisan & Garis Hitam)
 void drawNotifDetail() {
   if (notifCount == 0) {
     currentState = STATE_STANDBY;
@@ -328,7 +393,7 @@ void drawNotifDetail() {
 
   // Header
   display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
+  display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
   display.setCursor(0, 0);
   display.print(F("["));
   display.print(n.app);
@@ -336,7 +401,7 @@ void drawNotifDetail() {
   display.print(selectedNotif + 1);
   display.print(F("/"));
   display.print(notifCount);
-  display.drawLine(0, 9, 127, 9, SSD1306_WHITE);
+  display.drawLine(0, 9, 127, 9, SSD1306_BLACK);
 
   // Pengirim
   display.setCursor(0, 13);
@@ -368,7 +433,7 @@ void drawNotifDetail() {
   drawBottomBar("B1:Next", "B2:Kembali");
 }
 
-// 5. MENU PENGATURAN (Smooth Scrolling Window)
+// 5. MENU PENGATURAN (Latar Putih, Tulisan Hitam, Kursor Kontras)
 void drawMenu() {
   drawTopBar("MENU", true);
 
@@ -385,11 +450,15 @@ void drawMenu() {
     int lineRow = i - startIdx;
     int y = 14 + (lineRow * 12);
     display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, y);
     if (i == currentMenuIdx) {
+      // Highlight menu yang dipilih dengan balok hitam teks putih
+      display.fillRect(0, y - 1, 128, 11, SSD1306_BLACK);
+      display.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
+      display.setCursor(2, y);
       display.print(F("> "));
     } else {
+      display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
+      display.setCursor(2, y);
       display.print(F("  "));
     }
     display.print(menuItems[i]);
@@ -398,12 +467,12 @@ void drawMenu() {
   drawBottomBar("B1:Geser", "B2:Pilih");
 }
 
-// 6. STATUS PERANGKAT
+// 6. STATUS PERANGKAT (Latar Putih, Tulisan Hitam)
 void drawDeviceStatus() {
   drawTopBar("STATUS", false);
 
   display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
+  display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
 
   display.setCursor(0, 14);
   display.print(F("Perangkat: ESP32-C3"));
@@ -426,9 +495,9 @@ void drawDeviceStatus() {
   drawBottomBar("B1:Kembali", "B2:Kembali");
 }
 
-// Render Layar Utama
+// Render Layar Utama (Latar Putih Bersih di Seluruh Layar)
 void drawUI() {
-  display.clearDisplay();
+  display.fillScreen(SSD1306_WHITE);
 
   switch (currentState) {
     case STATE_STANDBY:
@@ -465,6 +534,7 @@ void setup() {
 
   // Inisialisasi I2C OLED (SDA: GPIO 8, SCL: GPIO 9)
   Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
+  Wire.setClock(400000); // Mode Cepat 400kHz untuk transmisi display stabil & bebas flicker
 
   // Inisialisasi Layar OLED (cek alamat 0x3C dan 0x3D)
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
@@ -473,13 +543,13 @@ void setup() {
     }
   }
 
-  // Tampilan Splash Screen
-  display.clearDisplay();
-  display.setTextColor(SSD1306_WHITE);
+  // Tampilan Splash Screen (Latar Putih, Tulisan Hitam)
+  display.fillScreen(SSD1306_WHITE);
+  display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
   display.setTextSize(1);
   display.setCursor(20, 18);
   display.print(F("ESP32-C3 NOTIF"));
-  display.drawLine(20, 30, 108, 30, SSD1306_WHITE);
+  display.drawLine(20, 30, 108, 30, SSD1306_BLACK);
   display.setCursor(24, 38);
   display.print(F("Sistem Siap..."));
   display.display();
@@ -494,9 +564,24 @@ void setup() {
 
 // --- LOOP UTAMA ---
 void loop() {
-  // Auto-dismiss popup notifikasi setelah batas waktu
-  if (currentState == STATE_POPUP && (millis() - popupTimer > POPUP_TIMEOUT)) {
+  // Auto-dismiss popup notifikasi setelah batas waktu dinamis tercapai
+  if (currentState == STATE_POPUP && (millis() - popupTimer > currentPopupTimeout)) {
     currentState = (lastState == STATE_POPUP) ? STATE_STANDBY : lastState;
+  }
+
+  // --- ANIMASI RUNNING TEXT (MARQUEE) POPUP DARI KANAN KE KIRI ---
+  if (currentState == STATE_POPUP && notifCount > 0) {
+    unsigned long now = millis();
+    if (now - lastPopupScrollTime >= POPUP_SCROLL_SPEED) {
+      lastPopupScrollTime = now;
+      popupScrollX -= POPUP_SCROLL_STEP;
+
+      int textPixelWidth = notifHistory[0].message.length() * 12; // TextSize 2 = 12 piksel per karakter
+      // Jika seluruh kalimat sudah selesai melintas ke sisi kiri layar, ulang dari sisi kanan
+      if (popupScrollX < -textPixelWidth) {
+        popupScrollX = SCREEN_WIDTH;
+      }
+    }
   }
 
   // --- PEMBACAAN TOMBOL 1 (B1 - GPIO 4: Next / Geser / Scroll) ---
@@ -601,5 +686,5 @@ void loop() {
 
   // Render Layar
   drawUI();
-  delay(15);
+  delay(10);
 }

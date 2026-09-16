@@ -60,8 +60,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:padding="16dp"
-                    android:layout_marginBottom="14dp">
+                    android:elevation="4dp"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -121,7 +122,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Perangkat: ESP32-SmartNotif (Auto-Sync)"
                                 android:textColor="@color/text_secondary"
-                                android:textSize="11sp"
+                                android:textSize="11.5sp"
                                 android:layout_marginTop="2dp" />
                         </LinearLayout>
                     </LinearLayout>
@@ -133,8 +134,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:padding="16dp"
-                    android:layout_marginBottom="14dp">
+                    android:elevation="4dp"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -156,7 +158,7 @@
                             android:layout_marginStart="8dp"
                             android:text="Filter Aplikasi yang Diteruskan"
                             android:textColor="@color/text_primary"
-                            android:textSize="13sp"
+                            android:textSize="13.5sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -172,6 +174,8 @@
                             android:layout_weight="1"
                             android:text="@string/filter_wa"
                             android:textColor="@color/text_primary"
+                            app:thumbTint="@color/switch_thumb_selector"
+                            app:trackTint="@color/switch_track_selector"
                             android:checked="true" />
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
@@ -181,6 +185,8 @@
                             android:layout_weight="1"
                             android:text="@string/filter_telegram"
                             android:textColor="@color/text_primary"
+                            app:thumbTint="@color/switch_thumb_selector"
+                            app:trackTint="@color/switch_track_selector"
                             android:checked="true" />
                     </LinearLayout>
 
@@ -197,6 +203,8 @@
                             android:layout_weight="1"
                             android:text="@string/filter_sms"
                             android:textColor="@color/text_primary"
+                            app:thumbTint="@color/switch_thumb_selector"
+                            app:trackTint="@color/switch_track_selector"
                             android:checked="true" />
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
@@ -206,6 +214,8 @@
                             android:layout_weight="1"
                             android:text="@string/filter_ig"
                             android:textColor="@color/text_primary"
+                            app:thumbTint="@color/switch_thumb_selector"
+                            app:trackTint="@color/switch_track_selector"
                             android:checked="true" />
                     </LinearLayout>
                 </LinearLayout>
@@ -216,8 +226,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:padding="16dp"
-                    android:layout_marginBottom="14dp">
+                    android:elevation="4dp"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -232,9 +243,13 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/hint_test_title"
-                        app:boxBackgroundColor="@color/background"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxBackgroundColor="@color/card_bg_elevated"
                         app:boxStrokeColor="@color/card_stroke"
-                        app:hintTextColor="@color/primary"
+                        app:hintTextColor="@color/text_secondary"
                         android:textColorHint="@color/text_muted">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -250,11 +265,15 @@
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="10dp"
                         android:hint="@string/hint_test_msg"
-                        app:boxBackgroundColor="@color/background"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxBackgroundColor="@color/card_bg_elevated"
                         app:boxStrokeColor="@color/card_stroke"
-                        app:hintTextColor="@color/primary"
+                        app:hintTextColor="@color/text_secondary"
                         android:textColorHint="@color/text_muted">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -269,14 +288,75 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnSendTest"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="14dp"
                         android:text="@string/btn_send_test"
-                        android:textSize="13sp"
+                        android:textColor="@color/white"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold"
                         app:icon="@drawable/ic_send"
                         app:iconGravity="textStart"
-                        app:cornerRadius="8dp"
+                        app:cornerRadius="14dp"
                         app:backgroundTint="@color/primary" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="10dp">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnTestSyncTime"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:text="Tes [TIME]"
+                            android:textColor="@color/text_primary"
+                            android:textSize="11sp"
+                            app:cornerRadius="12dp"
+                            app:strokeColor="@color/card_stroke"
+                            app:strokeWidth="1dp"
+                            app:backgroundTint="@color/card_bg_elevated"
+                            android:elevation="2dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnTestSyncWeather"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:layout_marginEnd="4dp"
+                            android:text="Tes [WEATHER]"
+                            android:textColor="@color/text_primary"
+                            android:textSize="11sp"
+                            app:cornerRadius="12dp"
+                            app:strokeColor="@color/card_stroke"
+                            app:strokeWidth="1dp"
+                            app:backgroundTint="@color/card_bg_elevated"
+                            android:elevation="2dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnTestNav"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:text="Tes [NAV]"
+                            android:textColor="@color/text_primary"
+                            android:textSize="11sp"
+                            app:cornerRadius="12dp"
+                            app:strokeColor="@color/card_stroke"
+                            app:strokeWidth="1dp"
+                            app:backgroundTint="@color/card_bg_elevated"
+                            android:elevation="2dp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <!-- KARTU LOG NOTIFIKASI REAL-TIME -->
@@ -285,7 +365,8 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:padding="16dp">
+                    android:elevation="4dp"
+                    android:padding="18dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -310,11 +391,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Hapus Log"
-                            android:textColor="@color/primary"
+                            android:textColor="@color/text_secondary"
                             android:textSize="11sp"
                             app:icon="@drawable/ic_delete"
                             app:iconSize="14dp"
-                            app:iconTint="@color/primary"
+                            app:iconTint="@color/text_secondary"
                             android:padding="4dp" />
                     </LinearLayout>
 
@@ -383,8 +464,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:padding="16dp"
-                    android:layout_marginBottom="14dp">
+                    android:elevation="4dp"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -407,7 +489,7 @@
                             android:layout_marginStart="8dp"
                             android:text="Akses Notifikasi Android"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="14.5sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -418,8 +500,8 @@
                             android:textColor="@color/status_connecting"
                             android:textSize="11sp"
                             android:textStyle="bold"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="2dp"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="3dp"
                             android:background="@drawable/bg_badge"
                             android:backgroundTint="@color/card_stroke" />
                     </LinearLayout>
@@ -429,20 +511,21 @@
                         android:layout_height="wrap_content"
                         android:text="Aplikasi memerlukan izin ini agar dapat meneruskan isi pesan masuk ke layar OLED ESP32."
                         android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:layout_marginBottom="12dp" />
+                        android:textSize="11.5sp"
+                        android:layout_marginBottom="14dp" />
 
                     <!-- Tombol Utama: Buka Pengaturan Akses Notifikasi -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnMenuNotifAccess"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="48dp"
                         android:text="Buka Akses Notifikasi"
                         android:textColor="@color/white"
-                        android:textSize="13sp"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold"
                         app:icon="@drawable/ic_notifications_active"
                         app:iconGravity="textStart"
-                        app:cornerRadius="8dp"
+                        app:cornerRadius="14dp"
                         app:backgroundTint="@color/primary"
                         android:layout_marginBottom="14dp" />
 
@@ -451,9 +534,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:background="@color/background"
-                        android:padding="12dp"
-                        android:layout_marginBottom="10dp">
+                        android:background="@drawable/bg_card_floating"
+                        android:elevation="2dp"
+                        android:padding="14dp"
+                        android:layout_marginBottom="12dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -473,8 +557,8 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="6dp"
                                 android:text="Jika Saklar Notifikasi Abu-abu / Terkunci:"
-                                android:textColor="#F59E0B"
-                                android:textSize="11sp"
+                                android:textColor="#B87A28"
+                                android:textSize="11.5sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
 
@@ -491,14 +575,18 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnMenuAppInfo"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="44dp"
                         android:text="Buka Info Aplikasi"
                         android:textColor="@color/text_primary"
-                        android:textSize="12sp"
+                        android:textSize="12.5sp"
                         app:icon="@drawable/ic_app_settings"
                         app:iconGravity="textStart"
-                        app:cornerRadius="8dp"
-                        app:backgroundTint="@color/card_stroke" />
+                        app:iconTint="@color/text_primary"
+                        app:cornerRadius="14dp"
+                        app:strokeColor="@color/card_stroke"
+                        app:strokeWidth="1dp"
+                        app:backgroundTint="@color/card_bg_elevated"
+                        android:elevation="2dp" />
                 </LinearLayout>
 
                 <!-- SEKSI 2: KONEKSI BLUETOOTH & DEVICE INFO -->
@@ -507,8 +595,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:padding="16dp"
-                    android:layout_marginBottom="14dp">
+                    android:elevation="4dp"
+                    android:padding="18dp"
+                    android:layout_marginBottom="16dp">
 
                     <!-- Header Seksi Bluetooth -->
                     <LinearLayout
@@ -531,7 +620,7 @@
                             android:layout_marginStart="8dp"
                             android:text="Koneksi Bluetooth ESP32"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="14.5sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -541,16 +630,17 @@
                         android:text="Pindai dan pilih perangkat ESP32-C3 di sekitar Anda untuk dihubungkan."
                         android:textColor="@color/text_secondary"
                         android:textSize="11.5sp"
-                        android:layout_marginBottom="12dp" />
+                        android:layout_marginBottom="14dp" />
 
-                    <!-- KOTAK STATUS PERANGKAT SAAT INI -->
+                    <!-- KOTAK STATUS PERANGKAT SAAT INI (FLOATING WHITE) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:background="@color/background"
-                        android:padding="12dp"
+                        android:background="@drawable/bg_card_floating"
+                        android:elevation="2dp"
+                        android:padding="14dp"
                         android:layout_marginBottom="14dp">
 
                         <View
@@ -573,7 +663,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Tidak Ada Perangkat Terhubung"
                                 android:textColor="@color/text_primary"
-                                android:textSize="13sp"
+                                android:textSize="13.5sp"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -589,11 +679,11 @@
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnDisconnectBle"
                             android:layout_width="wrap_content"
-                            android:layout_height="32dp"
+                            android:layout_height="34dp"
                             android:text="Putuskan"
                             android:textColor="@color/status_disconnected"
                             android:textSize="11sp"
-                            app:cornerRadius="6dp"
+                            app:cornerRadius="10dp"
                             app:strokeColor="@color/status_disconnected"
                             app:strokeWidth="1dp"
                             app:backgroundTint="@android:color/transparent"
@@ -610,7 +700,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="10dp">
+                        android:layout_marginBottom="12dp">
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -623,7 +713,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Saring Khusus ESP32 / ESP32-C3"
                                 android:textColor="@color/text_primary"
-                                android:textSize="12.5sp"
+                                android:textSize="13sp"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -638,6 +728,8 @@
                             android:id="@+id/switchFilterEspOnly"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            app:thumbTint="@color/switch_thumb_selector"
+                            app:trackTint="@color/switch_track_selector"
                             android:checked="true" />
                     </LinearLayout>
 
@@ -645,15 +737,16 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnMenuRescanBle"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="48dp"
                         android:text="Mulai Pindai Bluetooth"
-                        android:textSize="13sp"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold"
                         android:textColor="@color/white"
                         app:icon="@drawable/ic_refresh"
                         app:iconGravity="textStart"
-                        app:cornerRadius="8dp"
+                        app:cornerRadius="14dp"
                         app:backgroundTint="@color/primary"
-                        android:layout_marginBottom="8dp" />
+                        android:layout_marginBottom="10dp" />
 
                     <!-- PROGRESS BAR PEMINDAIAN -->
                     <com.google.android.material.progressindicator.LinearProgressIndicator
