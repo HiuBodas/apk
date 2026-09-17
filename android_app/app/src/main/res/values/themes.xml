@@ -11,7 +11,7 @@
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
 
         <!-- Default BottomNavigationView style: compact and proportional like WhatsApp -->
-        <item name="bottomNavigationViewStyle">@style/Widget.App.BottomNavigationView</item>
+        <item name="bottomNavigationStyle">@style/Widget.App.BottomNavigationView</item>
     </style>
 
     <!-- WhatsApp-style Proportional Bottom Navigation Bar -->
