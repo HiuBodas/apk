@@ -1,9 +1,16 @@
 <resources>
     <string name="app_name">ESP32 Smart Notif</string>
+    <string name="app_subtitle">Penerus Otomatis Chat ke OLED ESP32</string>
     <string name="notif_service_name">Layanan Notifikasi ESP32</string>
 
+    <!-- Navigasi Bawah -->
+    <string name="nav_home">Menu</string>
+    <string name="nav_settings">Pengaturan</string>
+
+    <!-- Status Koneksi Bluetooth -->
     <string name="title_ble_status">Status Koneksi Bluetooth</string>
     <string name="device_target_name">ESP32-SmartNotif</string>
+    <string name="device_auto_sync_desc">Perangkat: ESP32-SmartNotif (Auto-Sync)</string>
     <string name="btn_reconnect">Deteksi Ulang</string>
 
     <string name="status_connected">TERHUBUNG</string>
@@ -11,31 +18,95 @@
     <string name="status_scanning">MENDETEKSI ESP32...</string>
     <string name="status_connecting">MEMERIKSA KONEKSI...</string>
 
+    <!-- Filter Aplikasi -->
     <string name="title_app_filter">Aplikasi yang Diteruskan</string>
+    <string name="title_filter_apps">Filter Aplikasi yang Diteruskan</string>
     <string name="filter_wa">WhatsApp</string>
     <string name="filter_telegram">Telegram</string>
     <string name="filter_sms">SMS / Telepon</string>
     <string name="filter_ig">Instagram</string>
     <string name="filter_other">Aplikasi Lainnya</string>
 
-    <string name="title_test_send">Kirim Tes Notifikasi</string>
+    <!-- Panel Pengujian Menu Utama -->
+    <string name="panel_title_test_notif">Uji Notifikasi Chat</string>
+    <string name="panel_sub_test_notif">Format: [WA] Pengirim: Pesan</string>
     <string name="hint_test_title">Nama Pengirim (Cth: Budi)</string>
     <string name="hint_test_msg">Isi Pesan (Cth: Halo bro apa kabar?)</string>
+    <string name="sample_sender">Budi</string>
+    <string name="sample_message">Halo! Ini tes notifikasi langsung ke ESP32</string>
     <string name="btn_send_test">Kirim ke OLED ESP32</string>
 
-    <!-- 4 Box Panel Menu Utama Pengujian -->
-    <string name="panel_title_test_notif">1. Uji Notifikasi Chat / Pesan</string>
-    <string name="panel_sub_test_notif">Format: [WA] Pengirim: Pesan</string>
-    <string name="panel_title_test_time">2. Uji Waktu &amp; Baterai (Tes Time)</string>
+    <string name="panel_title_test_time">Uji Waktu &amp; Baterai</string>
     <string name="panel_sub_test_time">Format: [TIME] HH:mm:ss|dd/MM/yyyy|Hari|Baterai%</string>
-    <string name="panel_title_test_weather">3. Uji Prakiraan Cuaca (Tes Weath)</string>
-    <string name="panel_sub_test_weather">Format: [WEATHER] Kota|Suhu|Icon|Max|Min|UV|Tekanan</string>
-    <string name="panel_title_test_nav">4. Uji Navigasi Google Maps (Tes Nav)</string>
-    <string name="panel_sub_test_nav">Format: [NAV] Instruksi|Jarak|ETA|1</string>
+    <string name="label_time_battery_payload">Payload Jam &amp; Baterai HP Terkini:</string>
+    <string name="desc_time_battery">Menyinkronkan waktu HP, tanggal, nama hari, dan level baterai ke jam digital OLED ESP32.</string>
+    <string name="btn_send_time_battery">Kirim Sinkronisasi Jam &amp; Baterai</string>
 
+    <string name="panel_title_test_weather">Uji Prakiraan Cuaca</string>
+    <string name="panel_sub_test_weather">Format: [WEATHER] Kota|Suhu|Icon|Max|Min|UV|Tekanan</string>
+    <string name="label_weather_payload">Payload Cuaca Terkini / Tersimpan:</string>
+    <string name="desc_weather">Diambil otomatis via Open-Meteo API gratis sesuai koordinat GPS atau lokasi tersimpan.</string>
+    <string name="btn_send_weather_live">Ambil &amp; Kirim Cuaca Live (GPS)</string>
+    <string name="btn_send_weather_sample">Kirim Sampel Cuaca (Offline)</string>
+
+    <string name="panel_title_test_nav">Uji Navigasi Google Maps</string>
+    <string name="panel_sub_test_nav">Format: [NAV] Instruksi|Jarak|ETA|1</string>
+    <string name="hint_nav_instruction">Instruksi Belokan / Jalan</string>
+    <string name="hint_nav_distance">Jarak (Cth: 200 m)</string>
+    <string name="hint_nav_eta">ETA (Cth: 15 mnt)</string>
+    <string name="sample_nav_instruction">Belok Kanan Jl. Sudirman</string>
+    <string name="sample_nav_distance">200 m</string>
+    <string name="sample_nav_eta">15 mnt</string>
+    <string name="label_nav_preview">Preview Payload Navigasi:</string>
+    <string name="btn_send_nav">Kirim Panduan Navigasi</string>
+    <string name="btn_stop_nav">Hentikan Navigasi</string>
+
+    <!-- Log Notifikasi -->
     <string name="title_live_logs">Log Real-Time Notifikasi</string>
     <string name="logs_empty">Belum ada notifikasi yang diteruskan.</string>
+    <string name="btn_clear_logs">Hapus Log</string>
 
+    <!-- Tab Pengaturan -->
+    <string name="title_settings">Pengaturan dan Izin</string>
+    <string name="subtitle_settings">Kelola akses notifikasi sistem, izin keamanan, dan Bluetooth</string>
+    <string name="title_notif_access">Akses Notifikasi Android</string>
+    <string name="status_notif_active">Izin Aktif</string>
+    <string name="status_notif_inactive">Belum Aktif</string>
+    <string name="desc_notif_access">Aplikasi memerlukan izin ini agar dapat meneruskan isi pesan masuk ke layar OLED ESP32.</string>
+    <string name="btn_open_notif_access">Buka Akses Notifikasi</string>
+    <string name="title_restricted_settings">Jika Saklar Notifikasi Abu-abu / Terkunci:</string>
+    <string name="desc_restricted_settings">1. Di halaman Akses Notifikasi, ketuk saklar ESP32 Smart Notif hingga muncul dialog Setelan Terbatas, lalu tekan OK.\n2. Buka Pengaturan HP, pilih Aplikasi, buka Lihat semua aplikasi, lalu pilih ESP32 Smart Notif.\n3. Tekan tombol menu titik tiga di pojok kanan atas, lalu pilih Izinkan setelan terbatas.\n4. Kembali ke Akses Notifikasi dan aktifkan saklarnya.</string>
+    <string name="btn_open_app_info">Buka Info Aplikasi</string>
+
+    <!-- Bluetooth di Tab Pengaturan -->
+    <string name="title_ble_section">Koneksi Bluetooth ESP32</string>
+    <string name="desc_ble_section">Pindai dan pilih perangkat ESP32-C3 di sekitar Anda untuk dihubungkan.</string>
+    <string name="status_no_device">Tidak Ada Perangkat Terhubung</string>
+    <string name="desc_start_scan_prompt">Tekan Mulai Pindai untuk mendeteksi ESP32-C3</string>
+    <string name="badge_disconnected">Terputus</string>
+    <string name="badge_connected">Terhubung</string>
+    <string name="badge_connecting">Menghubungkan</string>
+    <string name="btn_disconnect_ble">Putuskan Koneksi Bluetooth</string>
+    <string name="btn_cancel_connecting">Batalkan Sambungan Bluetooth</string>
+    <string name="btn_reconnect_saved">Hubungkan Kembali</string>
+    <string name="btn_forget_device">Lupakan</string>
+    <string name="title_filter_esp_only">Saring Khusus ESP32 / ESP32-C3</string>
+    <string name="desc_filter_esp_only">Hanya tampilkan modul ESP32 di daftar hasil scan</string>
+    <string name="btn_start_scan">Mulai Pindai Bluetooth</string>
+    <string name="btn_stop_scan">Hentikan Pemindaian</string>
+    <string name="title_available_devices">PERANGKAT TERSEDIA</string>
+    <string name="desc_scanning_progress">Memindai perangkat Bluetooth ESP32-C3 di sekitar...</string>
+    <string name="empty_ble_devices_msg">Belum ada perangkat terdeteksi.\nTekan \'Mulai Pindai Bluetooth\' untuk mendeteksi ESP32-C3.</string>
+
+    <!-- Tombol Adapter Item Perangkat -->
+    <string name="btn_connect">Hubungkan</string>
+    <string name="btn_disconnect">Putuskan</string>
+    <string name="btn_connecting">Menghubungkan...</string>
+    <string name="badge_esp32">ESP32</string>
+    <string name="badge_esp32_c3">ESP32-C3</string>
+    <string name="default_device_name">Perangkat BLE</string>
+
+    <!-- Izin -->
     <string name="permission_title">Izin Diperlukan</string>
     <string name="permission_ble_msg">Aplikasi membutuhkan izin Bluetooth dan Lokasi untuk mendeteksi ESP32-SmartNotif.</string>
 </resources>

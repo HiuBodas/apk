@@ -16,19 +16,22 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- ================= TAB 1: MENU ================= -->
+        <!-- Tab 1: Menu -->
         <androidx.core.widget.NestedScrollView
             android:id="@+id/layoutMenu"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fillViewport="true"
+            android:clipToPadding="false"
             android:visibility="visible">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:paddingHorizontal="16dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="28dp">
 
                 <!-- Header Menu Utama -->
                 <LinearLayout
@@ -48,7 +51,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Penerus Otomatis Chat ke OLED ESP32"
+                        android:text="@string/app_subtitle"
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp"
                         android:layout_marginTop="2dp" />
@@ -60,7 +63,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:elevation="4dp"
+                    android:elevation="2dp"
                     android:padding="18dp"
                     android:layout_marginBottom="16dp">
 
@@ -120,7 +123,7 @@
                                 android:id="@+id/tvBleDetail"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Perangkat: ESP32-SmartNotif (Auto-Sync)"
+                                android:text="@string/device_auto_sync_desc"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="11.5sp"
                                 android:layout_marginTop="2dp" />
@@ -134,7 +137,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:elevation="4dp"
+                    android:elevation="0dp"
                     android:padding="18dp"
                     android:layout_marginBottom="16dp">
 
@@ -156,7 +159,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="Filter Aplikasi yang Diteruskan"
+                            android:text="@string/title_filter_apps"
                             android:textColor="@color/text_primary"
                             android:textSize="13.5sp"
                             android:textStyle="bold" />
@@ -172,6 +175,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_marginEnd="6dp"
                             android:text="@string/filter_wa"
                             android:textColor="@color/text_primary"
                             app:useMaterialThemeColors="false"
@@ -184,6 +188,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_marginStart="6dp"
                             android:text="@string/filter_telegram"
                             android:textColor="@color/text_primary"
                             app:useMaterialThemeColors="false"
@@ -203,6 +208,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_marginEnd="6dp"
                             android:text="@string/filter_sms"
                             android:textColor="@color/text_primary"
                             app:useMaterialThemeColors="false"
@@ -215,6 +221,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_marginStart="6dp"
                             android:text="@string/filter_ig"
                             android:textColor="@color/text_primary"
                             app:useMaterialThemeColors="false"
@@ -224,15 +231,13 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- ========================================== -->
-                <!-- 1. BOX PANEL: UJI NOTIFIKASI CHAT / PESAN  -->
-                <!-- ========================================== -->
+                <!-- Panel Uji Notifikasi Chat -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:elevation="4dp"
+                    android:elevation="0dp"
                     android:padding="18dp"
                     android:layout_marginBottom="16dp">
 
@@ -293,8 +298,9 @@
                             android:layout_height="wrap_content"
                             android:textColor="@color/text_primary"
                             android:textSize="13sp"
-                            android:text="Budi"
-                            android:singleLine="true" />
+                            tools:text="@string/sample_sender"
+                            android:maxLines="1"
+                            android:inputType="textPersonName" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -317,7 +323,7 @@
                             android:layout_height="wrap_content"
                             android:textColor="@color/text_primary"
                             android:textSize="13sp"
-                            android:text="Halo! Ini tes notifikasi langsung ke ESP32" />
+                            tools:text="@string/sample_message" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.button.MaterialButton
@@ -335,15 +341,13 @@
                         app:backgroundTint="@color/primary" />
                 </LinearLayout>
 
-                <!-- ========================================== -->
-                <!-- 2. BOX PANEL: UJI WAKTU & BATERAI (TES TIME) -->
-                <!-- ========================================== -->
+                <!-- Panel Uji Waktu dan Baterai -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:elevation="4dp"
+                    android:elevation="0dp"
                     android:padding="18dp"
                     android:layout_marginBottom="16dp">
 
@@ -391,14 +395,14 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:background="@drawable/bg_card_floating"
-                        android:elevation="2dp"
+                        android:elevation="1dp"
                         android:padding="12dp"
                         android:layout_marginBottom="12dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Payload Jam &amp; Baterai HP Terkini:"
+                            android:text="@string/label_time_battery_payload"
                             android:textColor="@color/text_muted"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -407,7 +411,7 @@
                             android:id="@+id/tvTimeBatteryPreview"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="[TIME] --:--:--|--/--/----|--|--%"
+                            tools:text="[TIME] --:--:--|--/--/----|--|--%"
                             android:textColor="@color/text_primary"
                             android:textSize="12.5sp"
                             android:fontFamily="monospace"
@@ -417,7 +421,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Menyinkronkan waktu HP, tanggal, nama hari, dan level baterai ke jam digital OLED ESP32."
+                            android:text="@string/desc_time_battery"
                             android:textColor="@color/text_secondary"
                             android:textSize="11sp"
                             android:layout_marginTop="4dp" />
@@ -427,7 +431,7 @@
                         android:id="@+id/btnTestSyncTime"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:text="KIRIM SINKRONISASI JAM &amp; BATERAI"
+                        android:text="@string/btn_send_time_battery"
                         android:textColor="@color/white"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -437,15 +441,13 @@
                         app:backgroundTint="@color/primary" />
                 </LinearLayout>
 
-                <!-- ========================================== -->
-                <!-- 3. BOX PANEL: UJI CUACA (TES WEATH)       -->
-                <!-- ========================================== -->
+                <!-- Panel Uji Prakiraan Cuaca -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:elevation="4dp"
+                    android:elevation="0dp"
                     android:padding="18dp"
                     android:layout_marginBottom="16dp">
 
@@ -493,14 +495,14 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:background="@drawable/bg_card_floating"
-                        android:elevation="2dp"
+                        android:elevation="1dp"
                         android:padding="12dp"
                         android:layout_marginBottom="12dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Payload Cuaca Terkini / Tersimpan:"
+                            android:text="@string/label_weather_payload"
                             android:textColor="@color/text_muted"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -509,7 +511,7 @@
                             android:id="@+id/tvWeatherPreview"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="[WEATHER] Jakarta|30|1|33|24|6|1012"
+                            tools:text="[WEATHER] Jakarta|30|1|33|24|6|1012"
                             android:textColor="@color/text_primary"
                             android:textSize="12.5sp"
                             android:fontFamily="monospace"
@@ -519,7 +521,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Diambil otomatis via Open-Meteo API gratis sesuai koordinat GPS atau lokasi tersimpan."
+                            android:text="@string/desc_weather"
                             android:textColor="@color/text_secondary"
                             android:textSize="11sp"
                             android:layout_marginTop="4dp" />
@@ -529,7 +531,7 @@
                         android:id="@+id/btnTestSyncWeather"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:text="AMBIL &amp; KIRIM CUACA LIVE (GPS)"
+                        android:text="@string/btn_send_weather_live"
                         android:textColor="@color/white"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -538,12 +540,14 @@
                         app:cornerRadius="14dp"
                         app:backgroundTint="@color/primary" />
 
+                    <!-- Tombol Sampel Cuaca (Tap target minimal 44dp) -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnTestSampleWeather"
                         android:layout_width="match_parent"
-                        android:layout_height="40dp"
+                        android:layout_height="44dp"
+                        android:minHeight="44dp"
                         android:layout_marginTop="8dp"
-                        android:text="KIRIM SAMPLE CUACA (OFFLINE)"
+                        android:text="@string/btn_send_weather_sample"
                         android:textColor="@color/text_primary"
                         android:textSize="12sp"
                         app:icon="@drawable/ic_send"
@@ -553,20 +557,18 @@
                         app:strokeColor="@color/card_stroke"
                         app:strokeWidth="1dp"
                         app:backgroundTint="@color/card_bg_elevated"
-                        android:elevation="2dp"
+                        android:elevation="1dp"
                         android:insetTop="0dp"
                         android:insetBottom="0dp" />
                 </LinearLayout>
 
-                <!-- ========================================== -->
-                <!-- 4. BOX PANEL: UJI NAVIGASI GOOGLE MAPS    -->
-                <!-- ========================================== -->
+                <!-- Panel Uji Navigasi Google Maps -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:elevation="4dp"
+                    android:elevation="0dp"
                     android:padding="18dp"
                     android:layout_marginBottom="16dp">
 
@@ -611,7 +613,7 @@
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Instruksi Belokan / Jalan"
+                        android:hint="@string/hint_nav_instruction"
                         app:boxCornerRadiusTopStart="12dp"
                         app:boxCornerRadiusTopEnd="12dp"
                         app:boxCornerRadiusBottomStart="12dp"
@@ -627,8 +629,9 @@
                             android:layout_height="wrap_content"
                             android:textColor="@color/text_primary"
                             android:textSize="13sp"
-                            android:text="Belok Kanan Jl. Sudirman"
-                            android:singleLine="true" />
+                            tools:text="@string/sample_nav_instruction"
+                            android:maxLines="1"
+                            android:inputType="text" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <LinearLayout
@@ -642,7 +645,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginEnd="6dp"
-                            android:hint="Jarak (Cth: 200 m)"
+                            android:hint="@string/hint_nav_distance"
                             app:boxCornerRadiusTopStart="12dp"
                             app:boxCornerRadiusTopEnd="12dp"
                             app:boxCornerRadiusBottomStart="12dp"
@@ -658,8 +661,9 @@
                                 android:layout_height="wrap_content"
                                 android:textColor="@color/text_primary"
                                 android:textSize="13sp"
-                                android:text="200 m"
-                                android:singleLine="true" />
+                                tools:text="@string/sample_nav_distance"
+                                android:maxLines="1"
+                                android:inputType="text" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <com.google.android.material.textfield.TextInputLayout
@@ -667,7 +671,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginStart="6dp"
-                            android:hint="ETA (Cth: 15 mnt)"
+                            android:hint="@string/hint_nav_eta"
                             app:boxCornerRadiusTopStart="12dp"
                             app:boxCornerRadiusTopEnd="12dp"
                             app:boxCornerRadiusBottomStart="12dp"
@@ -683,8 +687,9 @@
                                 android:layout_height="wrap_content"
                                 android:textColor="@color/text_primary"
                                 android:textSize="13sp"
-                                android:text="15 mnt"
-                                android:singleLine="true" />
+                                tools:text="@string/sample_nav_eta"
+                                android:maxLines="1"
+                                android:inputType="text" />
                         </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
 
@@ -694,7 +699,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:background="@drawable/bg_card_floating"
-                        android:elevation="2dp"
+                        android:elevation="1dp"
                         android:padding="12dp"
                         android:layout_marginTop="10dp"
                         android:layout_marginBottom="12dp">
@@ -702,7 +707,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Preview Payload Navigasi:"
+                            android:text="@string/label_nav_preview"
                             android:textColor="@color/text_muted"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -711,7 +716,7 @@
                             android:id="@+id/tvNavPreview"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="[NAV] Belok Kanan Jl. Sudirman|200 m|15 mnt|1"
+                            tools:text="[NAV] Belok Kanan Jl. Sudirman|200 m|15 mnt|1"
                             android:textColor="@color/text_primary"
                             android:textSize="12.5sp"
                             android:fontFamily="monospace"
@@ -723,7 +728,7 @@
                         android:id="@+id/btnTestNav"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:text="KIRIM PANDUAN NAVIGASI [NAV]"
+                        android:text="@string/btn_send_nav"
                         android:textColor="@color/white"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -732,12 +737,14 @@
                         app:cornerRadius="14dp"
                         app:backgroundTint="@color/primary" />
 
+                    <!-- Tombol Hentikan Navigasi (Tap target minimal 44dp) -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnTestNavStop"
                         android:layout_width="match_parent"
-                        android:layout_height="40dp"
+                        android:layout_height="44dp"
+                        android:minHeight="44dp"
                         android:layout_marginTop="8dp"
-                        android:text="KIRIM NAVIGASI STOP [NAV] STOP"
+                        android:text="@string/btn_stop_nav"
                         android:textColor="@color/status_disconnected"
                         android:textSize="12sp"
                         app:icon="@drawable/ic_stop"
@@ -747,7 +754,7 @@
                         app:strokeColor="@color/status_disconnected"
                         app:strokeWidth="1dp"
                         app:backgroundTint="@color/card_bg_elevated"
-                        android:elevation="2dp"
+                        android:elevation="1dp"
                         android:insetTop="0dp"
                         android:insetBottom="0dp" />
                 </LinearLayout>
@@ -758,7 +765,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:elevation="4dp"
+                    android:elevation="0dp"
                     android:padding="18dp">
 
                     <LinearLayout
@@ -778,18 +785,22 @@
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
+                        <!-- Tombol Hapus Log (Tap target minimal 44dp) -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnClearLogs"
                             style="@style/Widget.Material3.Button.TextButton"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Hapus Log"
+                            android:layout_height="44dp"
+                            android:minHeight="44dp"
+                            android:minWidth="44dp"
+                            android:text="@string/btn_clear_logs"
                             android:textColor="@color/text_secondary"
                             android:textSize="11sp"
                             app:icon="@drawable/ic_delete"
                             app:iconSize="14dp"
                             app:iconTint="@color/text_secondary"
-                            android:padding="4dp" />
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="0dp" />
                     </LinearLayout>
 
                     <TextView
@@ -813,19 +824,22 @@
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 
-        <!-- ================= TAB 2: SETTING ================= -->
+        <!-- Tab 2: Setting -->
         <androidx.core.widget.NestedScrollView
             android:id="@+id/layoutSetting"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fillViewport="true"
+            android:clipToPadding="false"
             android:visibility="gone">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:paddingHorizontal="16dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="28dp">
 
                 <!-- Header Setting -->
                 <LinearLayout
@@ -837,7 +851,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Pengaturan dan Izin"
+                        android:text="@string/title_settings"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -845,7 +859,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Kelola akses notifikasi sistem, izin keamanan, dan Bluetooth"
+                        android:text="@string/subtitle_settings"
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp"
                         android:layout_marginTop="2dp" />
@@ -857,7 +871,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:elevation="4dp"
+                    android:elevation="0dp"
                     android:padding="18dp"
                     android:layout_marginBottom="16dp">
 
@@ -880,7 +894,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginStart="8dp"
-                            android:text="Akses Notifikasi Android"
+                            android:text="@string/title_notif_access"
                             android:textColor="@color/text_primary"
                             android:textSize="14.5sp"
                             android:textStyle="bold" />
@@ -889,7 +903,7 @@
                             android:id="@+id/tvNotifStatusBadge"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Belum Aktif"
+                            android:text="@string/status_notif_inactive"
                             android:textColor="@color/status_connecting"
                             android:textSize="11sp"
                             android:textStyle="bold"
@@ -902,7 +916,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Aplikasi memerlukan izin ini agar dapat meneruskan isi pesan masuk ke layar OLED ESP32."
+                        android:text="@string/desc_notif_access"
                         android:textColor="@color/text_secondary"
                         android:textSize="11.5sp"
                         android:layout_marginBottom="14dp" />
@@ -912,7 +926,7 @@
                         android:id="@+id/btnMenuNotifAccess"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:text="Buka Akses Notifikasi"
+                        android:text="@string/btn_open_notif_access"
                         android:textColor="@color/white"
                         android:textSize="13.5sp"
                         android:textStyle="bold"
@@ -928,7 +942,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:background="@drawable/bg_card_floating"
-                        android:elevation="2dp"
+                        android:elevation="1dp"
                         android:padding="14dp"
                         android:layout_marginBottom="12dp">
 
@@ -949,7 +963,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="6dp"
-                                android:text="Jika Saklar Notifikasi Abu-abu / Terkunci:"
+                                android:text="@string/title_restricted_settings"
                                 android:textColor="@color/status_connecting"
                                 android:textSize="11.5sp"
                                 android:textStyle="bold" />
@@ -958,7 +972,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="1. Di halaman Akses Notifikasi, ketuk saklar ESP32 Smart Notif hingga muncul dialog Setelan Terbatas, lalu tekan OK.\n2. Buka Pengaturan HP → Aplikasi → Lihat semua aplikasi → ESP32 Smart Notif.\n3. Tekan tombol titik tiga di pojok kanan atas, lalu pilih Izinkan setelan terbatas.\n4. Kembali ke Akses Notifikasi dan aktifkan saklarnya."
+                            android:text="@string/desc_restricted_settings"
                             android:textColor="@color/text_secondary"
                             android:textSize="10.5sp"
                             android:lineSpacingExtra="2dp" />
@@ -969,7 +983,8 @@
                         android:id="@+id/btnMenuAppInfo"
                         android:layout_width="match_parent"
                         android:layout_height="44dp"
-                        android:text="Buka Info Aplikasi"
+                        android:minHeight="44dp"
+                        android:text="@string/btn_open_app_info"
                         android:textColor="@color/text_primary"
                         android:textSize="12.5sp"
                         app:icon="@drawable/ic_app_settings"
@@ -979,7 +994,7 @@
                         app:strokeColor="@color/card_stroke"
                         app:strokeWidth="1dp"
                         app:backgroundTint="@color/card_bg_elevated"
-                        android:elevation="2dp" />
+                        android:elevation="1dp" />
                 </LinearLayout>
 
                 <!-- SEKSI 2: KONEKSI BLUETOOTH & DEVICE INFO -->
@@ -988,7 +1003,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card"
-                    android:elevation="4dp"
+                    android:elevation="0dp"
                     android:padding="18dp"
                     android:layout_marginBottom="16dp">
 
@@ -1011,7 +1026,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="Koneksi Bluetooth ESP32"
+                            android:text="@string/title_ble_section"
                             android:textColor="@color/text_primary"
                             android:textSize="14.5sp"
                             android:textStyle="bold" />
@@ -1020,7 +1035,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Pindai dan pilih perangkat ESP32-C3 di sekitar Anda untuk dihubungkan."
+                        android:text="@string/desc_ble_section"
                         android:textColor="@color/text_secondary"
                         android:textSize="11.5sp"
                         android:layout_marginBottom="14dp" />
@@ -1031,7 +1046,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:background="@drawable/bg_card_floating"
-                        android:elevation="2dp"
+                        android:elevation="1dp"
                         android:padding="16dp"
                         android:layout_marginBottom="14dp">
 
@@ -1060,7 +1075,7 @@
                                     android:id="@+id/tvSettingDeviceName"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Tidak Ada Perangkat Terhubung"
+                                    android:text="@string/status_no_device"
                                     android:textColor="@color/text_primary"
                                     android:textSize="14sp"
                                     android:textStyle="bold" />
@@ -1069,7 +1084,7 @@
                                     android:id="@+id/tvSettingDeviceAddress"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Tekan Mulai Pindai untuk mendeteksi ESP32-C3"
+                                    android:text="@string/desc_start_scan_prompt"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="11sp"
                                     android:layout_marginTop="2dp" />
@@ -1079,7 +1094,7 @@
                                 android:id="@+id/tvSettingBleBadge"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Terputus"
+                                android:text="@string/badge_disconnected"
                                 android:textColor="@color/status_disconnected"
                                 android:textSize="11sp"
                                 android:textStyle="bold"
@@ -1094,8 +1109,9 @@
                             android:id="@+id/btnDisconnectBle"
                             android:layout_width="match_parent"
                             android:layout_height="44dp"
+                            android:minHeight="44dp"
                             android:layout_marginTop="12dp"
-                            android:text="Putuskan Koneksi Bluetooth"
+                            android:text="@string/btn_disconnect_ble"
                             android:textColor="@color/status_disconnected"
                             android:textSize="12.5sp"
                             android:textStyle="bold"
@@ -1118,13 +1134,15 @@
                             android:layout_marginTop="12dp"
                             android:visibility="gone">
 
+                            <!-- Tombol Hubungkan Kembali (Tap target minimal 44dp) -->
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/btnReconnectSavedBle"
                                 android:layout_width="0dp"
-                                android:layout_height="42dp"
+                                android:layout_height="44dp"
+                                android:minHeight="44dp"
                                 android:layout_weight="1"
                                 android:layout_marginEnd="6dp"
-                                android:text="Hubungkan Kembali"
+                                android:text="@string/btn_reconnect_saved"
                                 android:textColor="@color/primary"
                                 android:textSize="12sp"
                                 android:textStyle="bold"
@@ -1137,11 +1155,13 @@
                                 app:strokeWidth="1.2dp"
                                 app:backgroundTint="@android:color/transparent" />
 
+                            <!-- Tombol Lupakan (Tap target minimal 44dp) -->
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/btnForgetSavedBle"
                                 android:layout_width="wrap_content"
-                                android:layout_height="42dp"
-                                android:text="Lupakan"
+                                android:layout_height="44dp"
+                                android:minHeight="44dp"
+                                android:text="@string/btn_forget_device"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="12sp"
                                 app:icon="@drawable/ic_delete"
@@ -1172,7 +1192,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Saring Khusus ESP32 / ESP32-C3"
+                                android:text="@string/title_filter_esp_only"
                                 android:textColor="@color/text_primary"
                                 android:textSize="13sp"
                                 android:textStyle="bold" />
@@ -1180,7 +1200,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Hanya tampilkan modul ESP32 di daftar hasil scan"
+                                android:text="@string/desc_filter_esp_only"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="10.5sp" />
                         </LinearLayout>
@@ -1200,7 +1220,7 @@
                         android:id="@+id/btnMenuRescanBle"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:text="Mulai Pindai Bluetooth"
+                        android:text="@string/btn_start_scan"
                         android:textSize="13.5sp"
                         android:textStyle="bold"
                         android:textColor="@color/white"
@@ -1225,7 +1245,7 @@
                         android:id="@+id/tvScanStatusInfo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Memindai perangkat Bluetooth ESP32-C3 di sekitar..."
+                        android:text="@string/desc_scanning_progress"
                         android:textColor="@color/status_connecting"
                         android:textSize="11sp"
                         android:visibility="gone"
@@ -1235,7 +1255,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="PERANGKAT TERSEDIA"
+                        android:text="@string/title_available_devices"
                         android:textColor="@color/text_muted"
                         android:textSize="11sp"
                         android:textStyle="bold"
@@ -1264,7 +1284,7 @@
                             android:id="@+id/tvEmptyBleDevicesMsg"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Belum ada perangkat terdeteksi.\nTekan 'Mulai Pindai Bluetooth' untuk mendeteksi ESP32-C3."
+                            android:text="@string/empty_ble_devices_msg"
                             android:textColor="@color/text_muted"
                             android:textSize="11.5sp"
                             android:textAlignment="center"

@@ -43,10 +43,7 @@ class NotificationReceiverService : NotificationListenerService() {
         // Abaikan notifikasi dari aplikasi ini sendiri
         if (packageName == applicationContext.packageName) return
 
-        // ================================================================
-        // FITUR 3: NAVIGASI GOOGLE MAPS
-        // Ditangani langsung secara terisolasi agar tidak mengganggu filter chat
-        // ================================================================
+        // Navigasi Google Maps ditangani terisolasi agar tidak terpengaruh filter chat
         if (packageName == "com.google.android.apps.maps") {
             handleGoogleMapsNavigation(sbn)
             return
@@ -60,7 +57,6 @@ class NotificationReceiverService : NotificationListenerService() {
         val notification = sbn.notification ?: return
         val extras = notification.extras ?: return
 
-        // Ambil judul (nama pengirim) dan isi teks
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()?.trim() ?: ""
         val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()?.trim()
             ?: extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()?.trim()
@@ -87,14 +83,12 @@ class NotificationReceiverService : NotificationListenerService() {
         val payload = "[$appCode] $sender: $message"
         Log.d(TAG, "Meneruskan Notifikasi ke ESP32: $payload")
 
-        // Kirim via Bluetooth BLE
         BleManager.getInstance(this).sendData(payload)
 
-        // Siapkan time stamp
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         val timeStr = timeFormat.format(Date())
 
-        // Kirim broadcast lokal agar UI MainActivity terupdate
+        // Broadcast ke UI MainActivity
         val intent = Intent(ACTION_NEW_NOTIF_LOG).apply {
             setPackage(applicationContext.packageName)
             putExtra(EXTRA_APP_CODE, appCode)
@@ -113,10 +107,10 @@ class NotificationReceiverService : NotificationListenerService() {
         val notification = sbn.notification ?: return
         val extras = notification.extras ?: return
 
-        // 1. Instruksi belokan atau nama jalan (EXTRA_TITLE)
+        // Instruksi belokan atau nama jalan (EXTRA_TITLE)
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()?.trim() ?: ""
 
-        // 2. Jarak dan ETA (EXTRA_TEXT / EXTRA_SUB_TEXT)
+        // Jarak dan ETA (EXTRA_TEXT / EXTRA_SUB_TEXT)
         val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()?.trim()
             ?: extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()?.trim()
             ?: ""

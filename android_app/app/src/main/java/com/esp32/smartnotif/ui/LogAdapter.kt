@@ -35,7 +35,7 @@ class LogAdapter(private val items: MutableList<NotifLogItem> = mutableListOf())
     override fun getItemCount(): Int = items.size
 
     fun addItem(item: NotifLogItem) {
-        items.add(0, item) // Tambah di paling atas
+        items.add(0, item)
         if (items.size > 50) {
             items.removeAt(items.size - 1)
         }

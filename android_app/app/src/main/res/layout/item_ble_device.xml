@@ -39,15 +39,16 @@
 
         <!-- Baris Nama & Badge ESP32 -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
             <TextView
                 android:id="@+id/tvDeviceName"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -60,7 +61,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:text="ESP32 C3"
+                android:text="@string/badge_esp32_c3"
                 android:textColor="@color/white"
                 android:textSize="9.5sp"
                 android:textStyle="bold"
@@ -106,16 +107,17 @@
 
     </LinearLayout>
 
-    <!-- Tombol Hubungkan / Status Terhubung -->
+    <!-- Tombol Hubungkan / Status Terhubung (Tap target minimal 44dp) -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnConnectDevice"
         android:layout_width="wrap_content"
-        android:layout_height="38dp"
+        android:layout_height="44dp"
+        android:minHeight="44dp"
         android:paddingHorizontal="14dp"
         android:paddingVertical="0dp"
-        android:text="Hubungkan"
+        android:text="@string/btn_connect"
         android:textColor="@color/white"
-        android:textSize="11.5sp"
+        android:textSize="12sp"
         android:textStyle="bold"
         app:cornerRadius="12dp"
         app:backgroundTint="@color/primary"

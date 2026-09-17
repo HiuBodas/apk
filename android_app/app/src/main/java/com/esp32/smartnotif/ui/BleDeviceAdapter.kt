@@ -39,18 +39,20 @@ class BleDeviceAdapter(
         val item = items[position]
         val context = holder.itemView.context
 
-        holder.tvDeviceName.text = if (item.name.isNotBlank()) item.name else "Perangkat BLE"
+        holder.tvDeviceName.text = if (item.name.isNotBlank()) item.name else context.getString(R.string.default_device_name)
         holder.tvDeviceAddress.text = item.address
 
-        // Tampilkan badge ESP32 C3 jika terdeteksi ESP32
         if (item.isEsp32) {
             holder.tvEspBadge.visibility = View.VISIBLE
-            holder.tvEspBadge.text = if (item.name.contains("C3", ignoreCase = true)) "ESP32-C3" else "ESP32"
+            holder.tvEspBadge.text = if (item.name.contains("C3", ignoreCase = true)) {
+                context.getString(R.string.badge_esp32_c3)
+            } else {
+                context.getString(R.string.badge_esp32)
+            }
         } else {
             holder.tvEspBadge.visibility = View.GONE
         }
 
-        // Tampilkan indikator RSSI dan warna sinyal
         holder.tvDeviceRssi.text = "${item.rssi} dBm"
         val rssiColorRes = when {
             item.rssi >= -65 -> R.color.status_connected
@@ -64,7 +66,7 @@ class BleDeviceAdapter(
 
         when {
             isCurrentConnected -> {
-                holder.btnConnectDevice.text = "Putuskan"
+                holder.btnConnectDevice.text = context.getString(R.string.btn_disconnect)
                 holder.btnConnectDevice.setIconResource(R.drawable.ic_bluetooth_disabled)
                 holder.btnConnectDevice.iconTint =
                     ColorStateList.valueOf(ContextCompat.getColor(context, R.color.white))
@@ -75,7 +77,7 @@ class BleDeviceAdapter(
                     ColorStateList.valueOf(ContextCompat.getColor(context, R.color.status_connected))
             }
             isCurrentConnecting -> {
-                holder.btnConnectDevice.text = "Menghubungkan..."
+                holder.btnConnectDevice.text = context.getString(R.string.btn_connecting)
                 holder.btnConnectDevice.icon = null
                 holder.btnConnectDevice.backgroundTintList =
                     ColorStateList.valueOf(ContextCompat.getColor(context, R.color.status_connecting))
@@ -84,7 +86,7 @@ class BleDeviceAdapter(
                     ColorStateList.valueOf(ContextCompat.getColor(context, R.color.status_connecting))
             }
             else -> {
-                holder.btnConnectDevice.text = "Hubungkan"
+                holder.btnConnectDevice.text = context.getString(R.string.btn_connect)
                 holder.btnConnectDevice.icon = null
                 holder.btnConnectDevice.backgroundTintList =
                     ColorStateList.valueOf(ContextCompat.getColor(context, R.color.primary))

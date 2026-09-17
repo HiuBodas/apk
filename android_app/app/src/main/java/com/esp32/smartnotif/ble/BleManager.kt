@@ -273,7 +273,7 @@ class BleManager private constructor(private val context: Context) {
         }
     }
 
-    // --- FITUR DISCOVERY DAFTAR PERANGKAT BLE ---
+    // Discovery dan pemindaian daftar perangkat BLE
     fun startDiscovery(esp32Only: Boolean = true) {
         val adapter = bluetoothAdapter ?: run {
             updateState(ConnectionState.DISCONNECTED, "Bluetooth tidak tersedia")

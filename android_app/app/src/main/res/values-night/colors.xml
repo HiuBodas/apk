@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Mode: Slate & Dark Emerald Aesthetic Palette -->
+    <!-- 1. Backgrounds & Surfaces -->
+    <color name="background">#0F1713</color>             <!-- Deep dark pine slate background -->
+    <color name="card_bg">#17231D</color>                <!-- Sleek dark surface card -->
+    <color name="card_bg_elevated">#1F2E27</color>       <!-- Elevated dark container -->
+    <color name="card_stroke">#283C32</color>            <!-- Subtle dark sage border -->
+    <color name="card_stroke_subtle">#20332A</color>     <!-- Subtle inner divider -->
+
+    <!-- 2. Typography & Iconography -->
+    <color name="text_primary">#E2ECE5</color>           <!-- Crisp mint-white (High legibility, >13:1) -->
+    <color name="text_secondary">#A4C2B1</color>         <!-- Soft sage secondary text (>8:1) -->
+    <color name="text_muted">#729381</color>             <!-- Muted sage auxiliary text (>4.5:1) -->
+
+    <!-- 3. Primary Accents & Buttons -->
+    <color name="primary">#42A36C</color>                <!-- Vibrant pastel emerald accent -->
+    <color name="primary_variant">#328254</color>        <!-- Deep pine green -->
+    <color name="primary_container">#1A3828</color>      <!-- Dark emerald container tint (Active pill) -->
+    <color name="on_primary_container">#A7F2C5</color>   <!-- High-contrast mint text on active container -->
+
+    <color name="secondary">#5DB885</color>              <!-- Medium pastel leaf green -->
+    <color name="secondary_variant">#439668</color>      <!-- Deep leaf green -->
+    <color name="accent_warm">#6FCF97</color>            <!-- Gentle pastel mint accent -->
+
+    <!-- 4. Status Indicators (Harmonious Accents) -->
+    <color name="status_connected">#4CD485</color>       <!-- Lush vibrant green -->
+    <color name="status_disconnected">#F27A6D</color>    <!-- Soft terracotta coral red -->
+    <color name="status_connecting">#F0B254</color>      <!-- Soft warm amber gold -->
+
+    <!-- 5. Toggles & Component States -->
+    <color name="switch_track_active">#3A9460</color>    <!-- Emerald track when ON -->
+    <color name="switch_track_inactive">#25362E</color>  <!-- Dark muted track when OFF -->
+    <color name="switch_thumb_active">#E2ECE5</color>    <!-- Crisp mint thumb -->
+    <color name="switch_thumb_inactive">#627D70</color>  <!-- Muted sage thumb when OFF -->
+
+    <!-- 6. Base Constants -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="ic_launcher_background">#17231D</color>
+</resources>

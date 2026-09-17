@@ -55,7 +55,6 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
     private var startTouchX = 0f
     private var startTouchY = 0f
 
-    // Request permissions launcher
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -137,12 +136,10 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
     }
 
     private fun setupUI() {
-        // Setup RecyclerView Log di Menu
         binding.rvNotifLogs.layoutManager = LinearLayoutManager(this)
         binding.rvNotifLogs.adapter = logAdapter
         updateEmptyLogsView()
 
-        // Setup RecyclerView Daftar Perangkat BLE di Tab Setting
         bleDeviceAdapter = BleDeviceAdapter { selectedDeviceItem ->
             onBleDeviceSelected(selectedDeviceItem)
         }
@@ -156,7 +153,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
     }
 
     private fun setupListeners() {
-        // 1. Bottom Navigation Bar (Navbar di bawah dengan Animasi Slide)
+        // Navigasi tab menu dan setting
         binding.bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
@@ -179,13 +176,10 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
             }
         }
 
-        // ----------------------------------------------------
-        // 2. Kontrol 4 Box Panel Menu Utama Pengujian
-        // ----------------------------------------------------
-
-        // Box Panel 1: Uji Notifikasi Pesan / Chat
+        // Panel pengujian fitur
         binding.btnSendTest.setOnClickListener {
-            val sender = binding.etTestSender.text?.toString()?.trim() ?: "Pengirim"
+            val inputSender = binding.etTestSender.text?.toString()?.trim()
+            val sender = if (!inputSender.isNullOrEmpty()) inputSender else getString(R.string.sample_sender)
             val msg = binding.etTestMessage.text?.toString()?.trim() ?: ""
 
             if (msg.isEmpty()) {
@@ -203,7 +197,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
             Toast.makeText(this, "Pesan dikirim ke ESP32", Toast.LENGTH_SHORT).show()
         }
 
-        // Box Panel 2: Uji Sinkronisasi Jam & Baterai HP (Tes Time)
+        // Sinkronisasi jam dan baterai
         binding.btnTestSyncTime.setOnClickListener {
             val payload = DeviceSyncHelper.buildTimeBatteryPayload(this)
             binding.tvTimeBatteryPreview.text = payload
@@ -213,7 +207,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
             Toast.makeText(this, "Terkirim: $payload", Toast.LENGTH_SHORT).show()
         }
 
-        // Box Panel 3: Uji Prakiraan Cuaca Open-Meteo (Tes Weath) - Live GPS
+        // Prakiraan cuaca live GPS
         binding.btnTestSyncWeather.setOnClickListener {
             Toast.makeText(this, "Mengambil data cuaca Open-Meteo...", Toast.LENGTH_SHORT).show()
             lifecycleScope.launch {
@@ -230,7 +224,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
             }
         }
 
-        // Box Panel 3: Uji Prakiraan Cuaca - Sample Cepat Offline
+        // Prakiraan cuaca sampel offline
         binding.btnTestSampleWeather.setOnClickListener {
             val sampleWeather = "[WEATHER] Jakarta|30|1|33|24|6|1012"
             binding.tvWeatherPreview.text = sampleWeather
@@ -240,7 +234,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
             Toast.makeText(this, "Terkirim Sample Cuaca: $sampleWeather", Toast.LENGTH_SHORT).show()
         }
 
-        // Box Panel 4: Uji Navigasi Google Maps (Tes Nav)
+        // Uji navigasi Google Maps
         binding.etNavInstruction.doAfterTextChanged { updateNavPreview() }
         binding.etNavDistance.doAfterTextChanged { updateNavPreview() }
         binding.etNavEta.doAfterTextChanged { updateNavPreview() }
@@ -262,19 +256,18 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
             Toast.makeText(this, "Navigasi Dihentikan: $stopPayload", Toast.LENGTH_SHORT).show()
         }
 
-        // 3. Hapus Log di Menu Utama
+        // Hapus log notifikasi
         binding.btnClearLogs.setOnClickListener {
             logAdapter.clear()
             updateEmptyLogsView()
         }
 
-        // 4. Kontrol di Tab Setting:
-        // A. Tombol Pengaturan Akses Notifikasi
+        // Akses setelan notifikasi sistem
         binding.btnMenuNotifAccess.setOnClickListener {
             PermissionHelper.openNotificationAccessSettings(this)
         }
 
-        // B. Tombol Buka Info Aplikasi
+        // Setelan info aplikasi
         binding.btnMenuAppInfo.setOnClickListener {
             PermissionHelper.openAppDetailsSettings(this)
             Toast.makeText(this, "Jika titik tiga tidak muncul, buka Pengaturan HP -> Aplikasi -> Lihat semua", Toast.LENGTH_LONG).show()
@@ -323,7 +316,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
 
         // F. Tombol Putuskan / Batalkan Koneksi Bluetooth
         binding.btnDisconnectBle.setOnClickListener {
-            val devName = bleManager.connectedDeviceName ?: bleManager.savedDeviceName ?: "ESP32"
+            val devName = bleManager.connectedDeviceName ?: bleManager.savedDeviceName ?: getString(R.string.device_target_name)
             bleManager.disconnect()
             Toast.makeText(this, "Koneksi Bluetooth ke $devName telah diputus", Toast.LENGTH_SHORT).show()
             updateSettingBleDeviceCard()
@@ -349,9 +342,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
         }
     }
 
-    // =========================================================================
-    // FITUR SLIDE SWITCH ANTAR MENU (MENU <-> SETTING)
-    // =========================================================================
+        // Transisi slide antar tab menu dan setting
 
     private fun switchToMenu(animated: Boolean = true) {
         if (currentTab == TAB_MENU && binding.layoutMenu.visibility == View.VISIBLE) return
@@ -560,10 +551,10 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
     private fun checkNotificationAccess() {
         val hasAccess = PermissionHelper.isNotificationAccessGranted(this)
         if (hasAccess) {
-            binding.tvNotifStatusBadge.text = "Izin Aktif"
+            binding.tvNotifStatusBadge.text = getString(R.string.status_notif_active)
             binding.tvNotifStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.status_connected))
         } else {
-            binding.tvNotifStatusBadge.text = "Belum Aktif"
+            binding.tvNotifStatusBadge.text = getString(R.string.status_notif_inactive)
             binding.tvNotifStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.status_connecting))
         }
     }
@@ -582,7 +573,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
     private fun updateSettingBleDeviceCard() {
         val isConnected = bleManager.currentState == BleManager.ConnectionState.CONNECTED
         val isConnecting = bleManager.currentState == BleManager.ConnectionState.CONNECTING
-        val devName = bleManager.connectedDeviceName ?: bleManager.savedDeviceName ?: "ESP32-SmartNotif"
+        val devName = bleManager.connectedDeviceName ?: bleManager.savedDeviceName ?: getString(R.string.device_target_name)
         val devAddress = bleManager.connectedDeviceAddress ?: bleManager.savedDeviceAddress
 
         when {
@@ -591,11 +582,11 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
                     ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_connected))
                 binding.tvSettingDeviceName.text = devName
                 binding.tvSettingDeviceAddress.text = "MAC: ${devAddress ?: "Tersambung"} • Terhubung"
-                binding.tvSettingBleBadge.text = "Terhubung"
+                binding.tvSettingBleBadge.text = getString(R.string.badge_connected)
                 binding.tvSettingBleBadge.setTextColor(ContextCompat.getColor(this, R.color.status_connected))
 
                 binding.btnDisconnectBle.visibility = View.VISIBLE
-                binding.btnDisconnectBle.text = "Putuskan Koneksi Bluetooth"
+                binding.btnDisconnectBle.text = getString(R.string.btn_disconnect_ble)
                 binding.btnDisconnectBle.setIconResource(R.drawable.ic_bluetooth_disabled)
 
                 binding.layoutSavedDeviceActions.visibility = View.GONE
@@ -605,11 +596,11 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
                     ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_connecting))
                 binding.tvSettingDeviceName.text = devName
                 binding.tvSettingDeviceAddress.text = "Menghubungkan ke ${devAddress ?: "perangkat"}..."
-                binding.tvSettingBleBadge.text = "Menghubungkan"
+                binding.tvSettingBleBadge.text = getString(R.string.badge_connecting)
                 binding.tvSettingBleBadge.setTextColor(ContextCompat.getColor(this, R.color.status_connecting))
 
                 binding.btnDisconnectBle.visibility = View.VISIBLE
-                binding.btnDisconnectBle.text = "Batalkan Sambungan Bluetooth"
+                binding.btnDisconnectBle.text = getString(R.string.btn_cancel_connecting)
                 binding.btnDisconnectBle.setIconResource(R.drawable.ic_stop)
 
                 binding.layoutSavedDeviceActions.visibility = View.GONE
@@ -617,9 +608,9 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
             else -> {
                 binding.viewSettingBleDot.backgroundTintList =
                     ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_disconnected))
-                binding.tvSettingDeviceName.text = if (devAddress != null) "Terputus dari $devName" else "Tidak Ada Perangkat Terhubung"
-                binding.tvSettingDeviceAddress.text = if (devAddress != null) "MAC: $devAddress (Siap dihubungkan)" else "Tekan Mulai Pindai untuk mendeteksi ESP32-C3"
-                binding.tvSettingBleBadge.text = "Terputus"
+                binding.tvSettingDeviceName.text = if (devAddress != null) "Terputus dari $devName" else getString(R.string.status_no_device)
+                binding.tvSettingDeviceAddress.text = if (devAddress != null) "MAC: $devAddress (Siap dihubungkan)" else getString(R.string.desc_start_scan_prompt)
+                binding.tvSettingBleBadge.text = getString(R.string.badge_disconnected)
                 binding.tvSettingBleBadge.setTextColor(ContextCompat.getColor(this, R.color.status_disconnected))
 
                 binding.btnDisconnectBle.visibility = View.GONE
@@ -638,10 +629,10 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
         )
     }
 
-    // --- BLE State Listener Callbacks ---
+    // Callback status koneksi Bluetooth
     override fun onStateChanged(state: BleManager.ConnectionState, message: String) {
         runOnUiThread {
-            val devName = bleManager.connectedDeviceName ?: bleManager.savedDeviceName ?: "ESP32-SmartNotif"
+            val devName = bleManager.connectedDeviceName ?: bleManager.savedDeviceName ?: getString(R.string.device_target_name)
             when (state) {
                 BleManager.ConnectionState.CONNECTED -> {
                     binding.tvBleStatus.text = getString(R.string.status_connected)
@@ -682,10 +673,10 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
 
     override fun onDataSent(data: String, success: Boolean) {}
 
-    // --- BleDiscoveryListener Callbacks ---
+    // Callback pemindaian perangkat Bluetooth
     override fun onDiscoveryStarted() {
         runOnUiThread {
-            binding.btnMenuRescanBle.text = "Hentikan Pemindaian"
+            binding.btnMenuRescanBle.text = getString(R.string.btn_stop_scan)
             binding.pbScanLoading.visibility = View.VISIBLE
             binding.tvScanStatusInfo.visibility = View.VISIBLE
             val filterEsp = binding.switchFilterEspOnly.isChecked
@@ -699,7 +690,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
 
     override fun onDiscoveryFinished() {
         runOnUiThread {
-            binding.btnMenuRescanBle.text = "Mulai Pindai Bluetooth"
+            binding.btnMenuRescanBle.text = getString(R.string.btn_start_scan)
             binding.pbScanLoading.visibility = View.GONE
             binding.tvScanStatusInfo.visibility = View.GONE
         }

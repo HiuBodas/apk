@@ -120,12 +120,12 @@ class BleForegroundService : Service(), BleManager.BleStateListener {
     }
 
     private fun onConnectedActions() {
-        // 1. Sinkronisasi Jam & Baterai HP
+        // Sinkronisasi jam dan baterai ponsel
         lastBatteryLevel = com.esp32.smartnotif.utils.DeviceSyncHelper.getBatteryPercentage(this)
         sendTimeAndBatterySync(lastBatteryLevel)
         registerBatteryReceiver()
 
-        // 2. Sinkronisasi Cuaca Open-Meteo
+        // Sinkronisasi cuaca Open-Meteo
         val cachedWeather = com.esp32.smartnotif.utils.WeatherManager.getLastSavedPayload(this)
         if (!cachedWeather.isNullOrEmpty()) {
             Log.d(TAG, "Mengirimkan data cuaca cache ke ESP32: $cachedWeather")
