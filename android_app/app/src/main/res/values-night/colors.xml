@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark Mode: Slate & Dark Emerald Aesthetic Palette -->
+    <!-- Dark Mode: Slate & Dark Emerald Aesthetic Palette (antislop-ui compliant) -->
     <!-- 1. Backgrounds & Surfaces -->
     <color name="background">#0F1713</color>             <!-- Deep dark pine slate background -->
     <color name="card_bg">#17231D</color>                <!-- Sleek dark surface card -->
@@ -11,16 +11,16 @@
     <!-- 2. Typography & Iconography -->
     <color name="text_primary">#E2ECE5</color>           <!-- Crisp mint-white (High legibility, >13:1) -->
     <color name="text_secondary">#A4C2B1</color>         <!-- Soft sage secondary text (>8:1) -->
-    <color name="text_muted">#729381</color>             <!-- Muted sage auxiliary text (>4.5:1) -->
+    <color name="text_muted">#7FA08E</color>             <!-- Muted sage auxiliary text (>5:1) -->
 
     <!-- 3. Primary Accents & Buttons -->
-    <color name="primary">#42A36C</color>                <!-- Vibrant pastel emerald accent -->
-    <color name="primary_variant">#328254</color>        <!-- Deep pine green -->
+    <color name="primary">#2D7A4D</color>                <!-- Balanced dark emerald (White text contrast > 4.8:1) -->
+    <color name="primary_variant">#205E3A</color>        <!-- Deep pine green -->
     <color name="primary_container">#1A3828</color>      <!-- Dark emerald container tint (Active pill) -->
     <color name="on_primary_container">#A7F2C5</color>   <!-- High-contrast mint text on active container -->
 
-    <color name="secondary">#5DB885</color>              <!-- Medium pastel leaf green -->
-    <color name="secondary_variant">#439668</color>      <!-- Deep leaf green -->
+    <color name="secondary">#4D9C6F</color>              <!-- Medium pastel leaf green -->
+    <color name="secondary_variant">#387A54</color>      <!-- Deep leaf green -->
     <color name="accent_warm">#6FCF97</color>            <!-- Gentle pastel mint accent -->
 
     <!-- 4. Status Indicators (Harmonious Accents) -->
