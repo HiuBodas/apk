@@ -16,9 +16,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- ================= TAB 1: MENU UTAMA ================= -->
+        <!-- ================= TAB 1: MENU ================= -->
         <androidx.core.widget.NestedScrollView
-            android:id="@+id/layoutMenuUtama"
+            android:id="@+id/layoutMenu"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fillViewport="true"
@@ -950,7 +950,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="6dp"
                                 android:text="Jika Saklar Notifikasi Abu-abu / Terkunci:"
-                                android:textColor="#B87A28"
+                                android:textColor="@color/status_connecting"
                                 android:textSize="11.5sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -1029,62 +1029,130 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
+                        android:orientation="vertical"
                         android:background="@drawable/bg_card_floating"
                         android:elevation="2dp"
-                        android:padding="14dp"
+                        android:padding="16dp"
                         android:layout_marginBottom="14dp">
 
-                        <View
-                            android:id="@+id/viewSettingBleDot"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
-                            android:background="@drawable/bg_badge"
-                            android:backgroundTint="@color/status_disconnected" />
-
+                        <!-- BARIS STATUS & INFO PERANGKAT -->
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="10dp"
-                            android:orientation="vertical">
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <View
+                                android:id="@+id/viewSettingBleDot"
+                                android:layout_width="10dp"
+                                android:layout_height="10dp"
+                                android:background="@drawable/bg_badge"
+                                android:backgroundTint="@color/status_disconnected" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="10dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tvSettingDeviceName"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Tidak Ada Perangkat Terhubung"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/tvSettingDeviceAddress"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Tekan Mulai Pindai untuk mendeteksi ESP32-C3"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp"
+                                    android:layout_marginTop="2dp" />
+                            </LinearLayout>
 
                             <TextView
-                                android:id="@+id/tvSettingDeviceName"
+                                android:id="@+id/tvSettingBleBadge"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Tidak Ada Perangkat Terhubung"
-                                android:textColor="@color/text_primary"
-                                android:textSize="13.5sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/tvSettingDeviceAddress"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Tekan Mulai Pindai untuk mendeteksi ESP32-C3"
-                                android:textColor="@color/text_muted"
+                                android:text="Terputus"
+                                android:textColor="@color/status_disconnected"
                                 android:textSize="11sp"
-                                android:layout_marginTop="1dp" />
+                                android:textStyle="bold"
+                                android:paddingHorizontal="10dp"
+                                android:paddingVertical="3dp"
+                                android:background="@drawable/bg_badge"
+                                android:backgroundTint="@color/card_stroke" />
                         </LinearLayout>
 
+                        <!-- TOMBOL UTAMA: PUTUSKAN KONEKSI BLUETOOTH -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnDisconnectBle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="34dp"
-                            android:text="Putuskan"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:layout_marginTop="12dp"
+                            android:text="Putuskan Koneksi Bluetooth"
                             android:textColor="@color/status_disconnected"
-                            android:textSize="11sp"
-                            app:cornerRadius="10dp"
+                            android:textSize="12.5sp"
+                            android:textStyle="bold"
+                            app:icon="@drawable/ic_bluetooth_disabled"
+                            app:iconGravity="textStart"
+                            app:iconTint="@color/status_disconnected"
+                            app:iconSize="18dp"
+                            app:cornerRadius="12dp"
                             app:strokeColor="@color/status_disconnected"
-                            app:strokeWidth="1dp"
+                            app:strokeWidth="1.2dp"
                             app:backgroundTint="@android:color/transparent"
-                            android:paddingHorizontal="10dp"
-                            android:paddingVertical="0dp"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp"
                             android:visibility="gone" />
+
+                        <!-- CONTAINER KONTROL JIKA TERPUTUS NAMUN MEMILIKI PERANGKAT TERSIMPAN -->
+                        <LinearLayout
+                            android:id="@+id/layoutSavedDeviceActions"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="12dp"
+                            android:visibility="gone">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnReconnectSavedBle"
+                                android:layout_width="0dp"
+                                android:layout_height="42dp"
+                                android:layout_weight="1"
+                                android:layout_marginEnd="6dp"
+                                android:text="Hubungkan Kembali"
+                                android:textColor="@color/primary"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                app:icon="@drawable/ic_bluetooth"
+                                app:iconGravity="textStart"
+                                app:iconTint="@color/primary"
+                                app:iconSize="18dp"
+                                app:cornerRadius="12dp"
+                                app:strokeColor="@color/primary"
+                                app:strokeWidth="1.2dp"
+                                app:backgroundTint="@android:color/transparent" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnForgetSavedBle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="42dp"
+                                android:text="Lupakan"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp"
+                                app:icon="@drawable/ic_delete"
+                                app:iconGravity="textStart"
+                                app:iconTint="@color/text_secondary"
+                                app:iconSize="18dp"
+                                app:cornerRadius="12dp"
+                                app:strokeColor="@color/card_stroke"
+                                app:strokeWidth="1dp"
+                                app:backgroundTint="@android:color/transparent" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <!-- SWITCH FILTER KHUSUS ESP32 -->
@@ -1219,7 +1287,7 @@
 
     </FrameLayout>
 
-    <!-- GARIS PEMISAH ATAS NAVBAR -->
+    <!-- GARIS PEMISAH ATAS NAVBAR (ALA WHATSAPP) -->
     <View
         android:id="@+id/navDivider"
         android:layout_width="0dp"
@@ -1229,17 +1297,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- BOTTOM NAVIGATION BAR (NAVBAR DI BAWAH) -->
+    <!-- BOTTOM NAVIGATION BAR (NAVBAR DI BAWAH - PROPORSI RAMPING ALA WHATSAPP) -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
+        style="@style/Widget.App.BottomNavigationView"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/bottom_nav_height"
         android:background="@color/card_bg"
+        app:elevation="0dp"
+        app:itemIconSize="@dimen/bottom_nav_icon_size"
         app:itemIconTint="@color/nav_item_color"
         app:itemTextColor="@color/nav_item_color"
-        app:menu="@menu/bottom_nav_menu"
-        app:elevation="8dp"
+        app:itemPaddingTop="@dimen/bottom_nav_padding_top"
+        app:itemPaddingBottom="@dimen/bottom_nav_padding_bottom"
+        app:itemActiveIndicatorStyle="@style/Widget.App.BottomNavIndicator"
+        app:itemTextAppearanceInactive="@style/TextAppearance.App.BottomNav.Inactive"
+        app:itemTextAppearanceActive="@style/TextAppearance.App.BottomNav.Active"
         app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

@@ -7,11 +7,16 @@ import android.content.IntentFilter
 import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
+import android.view.animation.DecelerateInterpolator
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.GestureDetectorCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -35,11 +40,23 @@ import java.util.Locale
 
 class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManager.BleDiscoveryListener {
 
+    companion object {
+        private const val TAB_MENU = 0
+        private const val TAB_SETTING = 1
+        private const val SWIPE_THRESHOLD_DP = 48
+        private const val SWIPE_VELOCITY_THRESHOLD_DP = 140
+    }
+
     private lateinit var binding: ActivityMainBinding
     private lateinit var bleManager: BleManager
     private lateinit var appFilterManager: AppFilterManager
     private val logAdapter = LogAdapter()
     private lateinit var bleDeviceAdapter: BleDeviceAdapter
+
+    private var currentTab = TAB_MENU
+    private lateinit var gestureDetector: GestureDetectorCompat
+    private var startTouchX = 0f
+    private var startTouchY = 0f
 
     // Request permissions launcher
     private val requestPermissionLauncher = registerForActivityResult(
@@ -79,6 +96,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
 
         setupUI()
         setupListeners()
+        setupSwipeGesture()
         checkAndRequestPermissions()
 
         // Jadwalkan update cuaca berkala setiap 30-45 menit via WorkManager
@@ -123,7 +141,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
     }
 
     private fun setupUI() {
-        // Setup RecyclerView Log di Menu Utama
+        // Setup RecyclerView Log di Menu
         binding.rvNotifLogs.layoutManager = LinearLayoutManager(this)
         binding.rvNotifLogs.adapter = logAdapter
         updateEmptyLogsView()
@@ -142,19 +160,23 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
     }
 
     private fun setupListeners() {
-        // 1. Bottom Navigation Bar (Navbar di bawah)
+        // 1. Bottom Navigation Bar (Navbar di bawah dengan Animasi Slide)
         binding.bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
-                    binding.layoutMenuUtama.visibility = View.VISIBLE
-                    binding.layoutSetting.visibility = View.GONE
+                    if (currentTab == TAB_MENU) {
+                        binding.layoutMenu.smoothScrollTo(0, 0)
+                    } else {
+                        switchToMenu(animated = true)
+                    }
                     true
                 }
                 R.id.nav_settings -> {
-                    binding.layoutMenuUtama.visibility = View.GONE
-                    binding.layoutSetting.visibility = View.VISIBLE
-                    syncSettingSwitches()
-                    updateSettingBleDeviceCard()
+                    if (currentTab == TAB_SETTING) {
+                        binding.layoutSetting.smoothScrollTo(0, 0)
+                    } else {
+                        switchToSetting(animated = true)
+                    }
                     true
                 }
                 else -> false
@@ -303,15 +325,236 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
             }
         }
 
-        // F. Tombol Putuskan Koneksi
+        // F. Tombol Putuskan / Batalkan Koneksi Bluetooth
         binding.btnDisconnectBle.setOnClickListener {
+            val devName = bleManager.connectedDeviceName ?: bleManager.savedDeviceName ?: "ESP32"
             bleManager.disconnect()
-            Toast.makeText(this, "Koneksi Bluetooth diputus", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Koneksi Bluetooth ke $devName telah diputus", Toast.LENGTH_SHORT).show()
+            updateSettingBleDeviceCard()
+        }
+
+        // G. Tombol Hubungkan Kembali ke Perangkat Tersimpan
+        binding.btnReconnectSavedBle.setOnClickListener {
+            if (!PermissionHelper.hasAllRuntimePermissions(this)) {
+                requestPermissionLauncher.launch(PermissionHelper.getRequiredPermissions())
+                return@setOnClickListener
+            }
+            Toast.makeText(this, "Menghubungkan kembali ke ESP32...", Toast.LENGTH_SHORT).show()
+            bleManager.startScanAndConnect()
+            updateSettingBleDeviceCard()
+        }
+
+        // H. Tombol Lupakan Perangkat Tersimpan
+        binding.btnForgetSavedBle.setOnClickListener {
+            bleManager.savedDeviceAddress = null
+            bleManager.savedDeviceName = null
+            Toast.makeText(this, "Perangkat tersimpan telah dilupakan", Toast.LENGTH_SHORT).show()
             updateSettingBleDeviceCard()
         }
     }
 
+    // =========================================================================
+    // FITUR SLIDE SWITCH ANTAR MENU (MENU <-> SETTING)
+    // =========================================================================
+
+    private fun switchToMenu(animated: Boolean = true) {
+        if (currentTab == TAB_MENU && binding.layoutMenu.visibility == View.VISIBLE) return
+        currentTab = TAB_MENU
+        if (binding.bottomNav.selectedItemId != R.id.nav_home) {
+            binding.bottomNav.selectedItemId = R.id.nav_home
+        }
+
+        if (!animated) {
+            binding.layoutSetting.animate().cancel()
+            binding.layoutMenu.animate().cancel()
+            binding.layoutSetting.visibility = View.GONE
+            binding.layoutMenu.visibility = View.VISIBLE
+            binding.layoutMenu.translationX = 0f
+            binding.layoutMenu.alpha = 1f
+            return
+        }
+
+        val containerWidth = binding.contentContainer.width.toFloat().let {
+            if (it <= 0f) resources.displayMetrics.widthPixels.toFloat() else it
+        }
+
+        binding.layoutSetting.animate().cancel()
+        binding.layoutMenu.animate().cancel()
+
+        // Tab Menu muncul dari kiri (slide ke kanan)
+        binding.layoutMenu.visibility = View.VISIBLE
+        binding.layoutMenu.translationX = -containerWidth
+        binding.layoutMenu.alpha = 0.5f
+        binding.layoutMenu.animate()
+            .translationX(0f)
+            .alpha(1f)
+            .setDuration(260)
+            .setInterpolator(DecelerateInterpolator(1.6f))
+            .start()
+
+        // Tab Setting keluar ke arah kanan
+        binding.layoutSetting.animate()
+            .translationX(containerWidth * 0.35f)
+            .alpha(0f)
+            .setDuration(260)
+            .setInterpolator(DecelerateInterpolator(1.6f))
+            .withEndAction {
+                binding.layoutSetting.visibility = View.GONE
+                binding.layoutSetting.translationX = 0f
+                binding.layoutSetting.alpha = 1f
+            }
+            .start()
+    }
+
+    private fun switchToSetting(animated: Boolean = true) {
+        if (currentTab == TAB_SETTING && binding.layoutSetting.visibility == View.VISIBLE) return
+        currentTab = TAB_SETTING
+        if (binding.bottomNav.selectedItemId != R.id.nav_settings) {
+            binding.bottomNav.selectedItemId = R.id.nav_settings
+        }
+
+        if (!animated) {
+            binding.layoutMenu.animate().cancel()
+            binding.layoutSetting.animate().cancel()
+            binding.layoutMenu.visibility = View.GONE
+            binding.layoutSetting.visibility = View.VISIBLE
+            binding.layoutSetting.translationX = 0f
+            binding.layoutSetting.alpha = 1f
+            syncSettingSwitches()
+            updateSettingBleDeviceCard()
+            return
+        }
+
+        val containerWidth = binding.contentContainer.width.toFloat().let {
+            if (it <= 0f) resources.displayMetrics.widthPixels.toFloat() else it
+        }
+
+        binding.layoutMenu.animate().cancel()
+        binding.layoutSetting.animate().cancel()
+
+        // Tab Setting muncul dari kanan (slide ke kiri)
+        binding.layoutSetting.visibility = View.VISIBLE
+        binding.layoutSetting.translationX = containerWidth
+        binding.layoutSetting.alpha = 0.5f
+        binding.layoutSetting.animate()
+            .translationX(0f)
+            .alpha(1f)
+            .setDuration(260)
+            .setInterpolator(DecelerateInterpolator(1.6f))
+            .start()
+
+        // Tab Menu keluar ke arah kiri
+        binding.layoutMenu.animate()
+            .translationX(-containerWidth * 0.35f)
+            .alpha(0f)
+            .setDuration(260)
+            .setInterpolator(DecelerateInterpolator(1.6f))
+            .withEndAction {
+                binding.layoutMenu.visibility = View.GONE
+                binding.layoutMenu.translationX = 0f
+                binding.layoutMenu.alpha = 1f
+            }
+            .start()
+
+        syncSettingSwitches()
+        updateSettingBleDeviceCard()
+    }
+
+    private fun setupSwipeGesture() {
+        val density = resources.displayMetrics.density
+        val minDistance = SWIPE_THRESHOLD_DP * density
+        val minVelocity = SWIPE_VELOCITY_THRESHOLD_DP * density
+
+        gestureDetector = GestureDetectorCompat(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent?,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
+                if (e1 == null || e2 == null) return false
+
+                val deltaX = e2.x - e1.x
+                val deltaY = e2.y - e1.y
+
+                // Deteksi gesekan dominan horizontal
+                if (Math.abs(deltaX) > Math.abs(deltaY) * 1.25f &&
+                    Math.abs(deltaX) > minDistance &&
+                    Math.abs(velocityX) > minVelocity
+                ) {
+                    if (deltaX < 0) {
+                        // Geser kiri -> Pindah ke Setting
+                        if (currentTab == TAB_MENU) {
+                            switchToSetting(animated = true)
+                            return true
+                        }
+                    } else {
+                        // Geser kanan -> Pindah ke Menu
+                        if (currentTab == TAB_SETTING) {
+                            switchToMenu(animated = true)
+                            return true
+                        }
+                    }
+                }
+                return false
+            }
+        })
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        gestureDetector.onTouchEvent(ev)
+
+        val density = resources.displayMetrics.density
+        val dragThreshold = 75 * density
+
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                startTouchX = ev.rawX
+                startTouchY = ev.rawY
+            }
+            MotionEvent.ACTION_UP -> {
+                val deltaX = ev.rawX - startTouchX
+                val deltaY = ev.rawY - startTouchY
+
+                val isInsideActiveInput = isTouchInsideActiveInput(ev.rawX, ev.rawY)
+
+                if (!isInsideActiveInput &&
+                    Math.abs(deltaX) > Math.abs(deltaY) * 1.35f &&
+                    Math.abs(deltaX) > dragThreshold
+                ) {
+                    if (deltaX < 0 && currentTab == TAB_MENU) {
+                        switchToSetting(animated = true)
+                    } else if (deltaX > 0 && currentTab == TAB_SETTING) {
+                        switchToMenu(animated = true)
+                    }
+                }
+            }
+        }
+
+        return super.dispatchTouchEvent(ev)
+    }
+
+    private fun isTouchInsideActiveInput(rawX: Float, rawY: Float): Boolean {
+        val focused = currentFocus ?: return false
+        if (focused is EditText) {
+            val loc = IntArray(2)
+            focused.getLocationOnScreen(loc)
+            return rawX >= loc[0] && rawX <= loc[0] + focused.width &&
+                   rawY >= loc[1] && rawY <= loc[1] + focused.height
+        }
+        return false
+    }
+
     private fun onBleDeviceSelected(item: BleDeviceItem) {
+        if (item.address.equals(bleManager.connectedDeviceAddress, ignoreCase = true) &&
+            bleManager.currentState == BleManager.ConnectionState.CONNECTED) {
+            val devName = item.name.ifBlank { "ESP32" }
+            bleManager.disconnect()
+            Toast.makeText(this, "Koneksi Bluetooth ke $devName telah diputus", Toast.LENGTH_SHORT).show()
+            updateSettingBleDeviceCard()
+            return
+        }
+
         Toast.makeText(this, "Menghubungkan ke ${item.name}...", Toast.LENGTH_SHORT).show()
         bleDeviceAdapter.updateConnectionStatus(null, item.address)
         bleManager.connectToDevice(item.device)
@@ -395,21 +638,44 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
                     ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_connected))
                 binding.tvSettingDeviceName.text = devName
                 binding.tvSettingDeviceAddress.text = "MAC: ${devAddress ?: "Tersambung"} • Terhubung"
+                binding.tvSettingBleBadge.text = "Terhubung"
+                binding.tvSettingBleBadge.setTextColor(ContextCompat.getColor(this, R.color.status_connected))
+
                 binding.btnDisconnectBle.visibility = View.VISIBLE
+                binding.btnDisconnectBle.text = "Putuskan Koneksi Bluetooth"
+                binding.btnDisconnectBle.setIconResource(R.drawable.ic_bluetooth_disabled)
+
+                binding.layoutSavedDeviceActions.visibility = View.GONE
             }
             isConnecting -> {
                 binding.viewSettingBleDot.backgroundTintList =
                     ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_connecting))
                 binding.tvSettingDeviceName.text = devName
                 binding.tvSettingDeviceAddress.text = "Menghubungkan ke ${devAddress ?: "perangkat"}..."
-                binding.btnDisconnectBle.visibility = View.GONE
+                binding.tvSettingBleBadge.text = "Menghubungkan"
+                binding.tvSettingBleBadge.setTextColor(ContextCompat.getColor(this, R.color.status_connecting))
+
+                binding.btnDisconnectBle.visibility = View.VISIBLE
+                binding.btnDisconnectBle.text = "Batalkan Sambungan Bluetooth"
+                binding.btnDisconnectBle.setIconResource(R.drawable.ic_stop)
+
+                binding.layoutSavedDeviceActions.visibility = View.GONE
             }
             else -> {
                 binding.viewSettingBleDot.backgroundTintList =
                     ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_disconnected))
                 binding.tvSettingDeviceName.text = if (devAddress != null) "Terputus dari $devName" else "Tidak Ada Perangkat Terhubung"
                 binding.tvSettingDeviceAddress.text = if (devAddress != null) "MAC: $devAddress (Siap dihubungkan)" else "Tekan Mulai Pindai untuk mendeteksi ESP32-C3"
+                binding.tvSettingBleBadge.text = "Terputus"
+                binding.tvSettingBleBadge.setTextColor(ContextCompat.getColor(this, R.color.status_disconnected))
+
                 binding.btnDisconnectBle.visibility = View.GONE
+
+                if (devAddress != null) {
+                    binding.layoutSavedDeviceActions.visibility = View.VISIBLE
+                } else {
+                    binding.layoutSavedDeviceActions.visibility = View.GONE
+                }
             }
         }
 
@@ -444,7 +710,7 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
                 }
                 BleManager.ConnectionState.DISCONNECTED -> {
                     binding.tvBleStatus.text = getString(R.string.status_disconnected)
-                    binding.tvBleDetail.text = "ESP32 tidak terdeteksi (Nyalakan saklar power ESP32)"
+                    binding.tvBleDetail.text = if (message.isNotEmpty()) message else "Koneksi Bluetooth terputus"
                     binding.viewStatusDot.backgroundTintList =
                         ColorStateList.valueOf(ContextCompat.getColor(this, R.color.status_disconnected))
                 }

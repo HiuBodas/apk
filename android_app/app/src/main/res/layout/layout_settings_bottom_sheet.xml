@@ -52,7 +52,7 @@
         android:textColor="@color/white"
         android:textSize="13sp"
         app:cornerRadius="8dp"
-        app:backgroundTint="#D97706"
+        app:backgroundTint="@color/status_connecting"
         android:layout_marginBottom="8dp" />
 
     <!-- Tombol Akses Notifikasi -->

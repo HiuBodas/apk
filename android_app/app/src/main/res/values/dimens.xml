@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- WhatsApp-style Proportional Bottom Navigation Bar Dimensions -->
+    <dimen name="bottom_nav_height">56dp</dimen>
+    <dimen name="bottom_nav_icon_size">22dp</dimen>
+    <dimen name="bottom_nav_indicator_width">48dp</dimen>
+    <dimen name="bottom_nav_indicator_height">26dp</dimen>
+    <dimen name="bottom_nav_padding_top">4dp</dimen>
+    <dimen name="bottom_nav_padding_bottom">4dp</dimen>
+    <dimen name="bottom_nav_text_size">11sp</dimen>
+</resources>

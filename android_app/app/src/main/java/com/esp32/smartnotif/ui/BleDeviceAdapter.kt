@@ -64,13 +64,13 @@ class BleDeviceAdapter(
 
         when {
             isCurrentConnected -> {
-                holder.btnConnectDevice.text = "Terhubung"
-                holder.btnConnectDevice.setIconResource(R.drawable.ic_check)
+                holder.btnConnectDevice.text = "Putuskan"
+                holder.btnConnectDevice.setIconResource(R.drawable.ic_bluetooth_disabled)
                 holder.btnConnectDevice.iconTint =
                     ColorStateList.valueOf(ContextCompat.getColor(context, R.color.white))
                 holder.btnConnectDevice.backgroundTintList =
-                    ColorStateList.valueOf(ContextCompat.getColor(context, R.color.status_connected))
-                holder.btnConnectDevice.isEnabled = false
+                    ColorStateList.valueOf(ContextCompat.getColor(context, R.color.status_disconnected))
+                holder.btnConnectDevice.isEnabled = true
                 holder.ivDeviceIcon.imageTintList =
                     ColorStateList.valueOf(ContextCompat.getColor(context, R.color.status_connected))
             }

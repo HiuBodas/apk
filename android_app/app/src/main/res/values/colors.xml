@@ -1,39 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Anti-gravity Warm Sand & Deep Espresso Palette -->
+    <!-- White & Pastel Green Aesthetic Palette -->
     <!-- 1. Backgrounds & Surfaces -->
-    <color name="background">#EFECE6</color>             <!-- Light warm sand background -->
-    <color name="card_bg">#FAF8F5</color>                <!-- Off-white floating panel -->
-    <color name="card_bg_elevated">#FFFFFF</color>       <!-- Pure white floating 3D surface -->
-    <color name="card_stroke">#E2DDD5</color>            <!-- Soft diffused hairline border -->
-    <color name="card_stroke_subtle">#ECE8E1</color>     <!-- Subtle inner divider -->
+    <color name="background">#F4F9F5</color>             <!-- Light airy pastel mint-white background -->
+    <color name="card_bg">#FFFFFF</color>                <!-- Crisp pure white panel -->
+    <color name="card_bg_elevated">#FFFFFF</color>       <!-- Crisp pure white floating surface -->
+    <color name="card_stroke">#D8EADF</color>            <!-- Soft delicate pastel sage border -->
+    <color name="card_stroke_subtle">#EBF4EE</color>     <!-- Ultra-subtle inner divider -->
 
     <!-- 2. Typography & Iconography -->
-    <color name="text_primary">#231914</color>           <!-- Deep espresso brown (High legibility) -->
-    <color name="text_secondary">#6E625A</color>         <!-- Warm medium mocha -->
-    <color name="text_muted">#9C9188</color>             <!-- Soft muted sand mocha -->
+    <color name="text_primary">#193324</color>           <!-- Deep forest emerald black (High legibility) -->
+    <color name="text_secondary">#466B54</color>         <!-- Soft medium eucalyptus sage -->
+    <color name="text_muted">#7D9F8B</color>             <!-- Muted pastel sage -->
 
     <!-- 3. Primary Accents & Buttons -->
-    <color name="primary">#2E2018</color>                <!-- Rich deep espresso button/accent -->
-    <color name="primary_variant">#1E1510</color>        <!-- Darkest espresso -->
-    <color name="primary_container">#E5DFD6</color>      <!-- Sand container tint -->
-    <color name="on_primary_container">#231914</color>
+    <color name="primary">#357A54</color>                <!-- Rich pastel forest green button/accent -->
+    <color name="primary_variant">#24593B</color>        <!-- Deep pine green -->
+    <color name="primary_container">#D8F5DD</color>      <!-- Soft pastel mint container tint (Active pill) -->
+    <color name="on_primary_container">#184729</color>   <!-- Forest text on mint container -->
 
-    <color name="secondary">#354E3E</color>              <!-- Deep sage green -->
-    <color name="secondary_variant">#263B2E</color>
-    <color name="accent_warm">#96694C</color>            <!-- Warm caramel/bronze highlight -->
+    <color name="secondary">#4D8E67</color>              <!-- Medium pastel leaf green -->
+    <color name="secondary_variant">#38734F</color>      <!-- Deep leaf green -->
+    <color name="accent_warm">#6BB389</color>            <!-- Gentle pastel mint accent -->
 
-    <!-- 4. Status Indicators (Refined Earthy Tones) -->
-    <color name="status_connected">#2E6F40</color>       <!-- Refined Forest Green -->
-    <color name="status_disconnected">#A33B32</color>    <!-- Muted Terracotta Red -->
-    <color name="status_connecting">#B87A28</color>      <!-- Warm Amber Gold -->
+    <!-- 4. Status Indicators (Harmonious Pastel Accents) -->
+    <color name="status_connected">#2E7D4E</color>       <!-- Pastel lush green -->
+    <color name="status_disconnected">#C45B50</color>    <!-- Soft pastel terracotta red -->
+    <color name="status_connecting">#C98D2E</color>      <!-- Soft warm amber gold -->
 
     <!-- 5. Toggles & Component States -->
-    <color name="switch_track_active">#2E2018</color>
-    <color name="switch_track_inactive">#D5CFC5</color>
-    <color name="switch_thumb_active">#FAF8F5</color>
-    <color name="switch_thumb_inactive">#8C8178</color>
+    <color name="switch_track_active">#4EA674</color>    <!-- Pastel green track when ON -->
+    <color name="switch_track_inactive">#D5E8DC</color>  <!-- Soft pastel mint-gray track when OFF -->
+    <color name="switch_thumb_active">#FFFFFF</color>    <!-- Pure white thumb -->
+    <color name="switch_thumb_inactive">#8FAFA0</color>  <!-- Muted sage thumb when OFF -->
 
+    <!-- 6. Base Constants -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
+    <color name="ic_launcher_background">#D8F7CE</color>
 </resources>

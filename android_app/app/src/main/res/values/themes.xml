@@ -9,5 +9,47 @@
         <item name="android:navigationBarColor">@color/card_bg</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+
+        <!-- Default BottomNavigationView style: compact and proportional like WhatsApp -->
+        <item name="bottomNavigationViewStyle">@style/Widget.App.BottomNavigationView</item>
+    </style>
+
+    <!-- WhatsApp-style Proportional Bottom Navigation Bar -->
+    <style name="Widget.App.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">@color/card_bg</item>
+        <item name="android:minHeight">@dimen/bottom_nav_height</item>
+        <item name="elevation">0dp</item>
+        <item name="itemIconSize">@dimen/bottom_nav_icon_size</item>
+        <item name="itemIconTint">@color/nav_item_color</item>
+        <item name="itemTextColor">@color/nav_item_color</item>
+        <item name="itemPaddingTop">@dimen/bottom_nav_padding_top</item>
+        <item name="itemPaddingBottom">@dimen/bottom_nav_padding_bottom</item>
+        <item name="labelVisibilityMode">labeled</item>
+        <item name="itemTextAppearanceInactive">@style/TextAppearance.App.BottomNav.Inactive</item>
+        <item name="itemTextAppearanceActive">@style/TextAppearance.App.BottomNav.Active</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.App.BottomNavIndicator</item>
+    </style>
+
+    <!-- Sleek & compact active pill indicator (Ala WhatsApp Material You) -->
+    <style name="Widget.App.BottomNavIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:width">@dimen/bottom_nav_indicator_width</item>
+        <item name="android:height">@dimen/bottom_nav_indicator_height</item>
+        <item name="android:color">@color/primary_container</item>
+    </style>
+
+    <!-- Bottom Nav Inactive Typography -->
+    <style name="TextAppearance.App.BottomNav.Inactive" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">@dimen/bottom_nav_text_size</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style>
+
+    <!-- Bottom Nav Active Typography (Bold, crisp) -->
+    <style name="TextAppearance.App.BottomNav.Active" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">@dimen/bottom_nav_text_size</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.01</item>
     </style>
 </resources>

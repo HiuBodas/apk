@@ -56,26 +56,27 @@ jobs:
       - name: Prepare APK for Release
         run: |
           mkdir -p release-apk
-          cp ./android_app/app/build/outputs/apk/debug/app-debug.apk ./release-apk/ESP32-SmartNotif-v1.0.6.apk
+          cp ./android_app/app/build/outputs/apk/debug/app-debug.apk ./release-apk/ESP32-SmartNotif-v1.0.7.apk
 
       - name: Upload APK ke Artifacts GitHub
         uses: actions/upload-artifact@v4
         with:
-          name: ESP32-SmartNotif-v1.0.6-APK
-          path: ./release-apk/ESP32-SmartNotif-v1.0.6.apk
+          name: ESP32-SmartNotif-v1.0.7-APK
+          path: ./release-apk/ESP32-SmartNotif-v1.0.7.apk
           retention-days: 30
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.6
-          name: 'ESP32 SmartNotif v1.0.6'
+          tag_name: v1.0.7
+          name: 'ESP32 SmartNotif v1.0.7'
           body: |
-            ## Pembaruan ESP32 SmartNotif v1.0.6
-            - Jam & Baterai HP (TIME)
-            - Cuaca Open-Meteo (WEATHER)
-            - Navigasi Google Maps (NAV)
-            - Tema Anti-Gravity Warm Sand & Deep Espresso
-          files: ./release-apk/ESP32-SmartNotif-v1.0.6.apk
+            ## Pembaruan ESP32 SmartNotif v1.0.7
+            - Navbar Bawah Ramping WhatsApp-Style (56dp & Active Capsule Indicator)
+            - Tombol Putuskan Koneksi Bluetooth di Halaman Setting
+            - Ikon Aplikasi BMO Pixel Art Kustom
+            - Navigasi Gestur Slide Switch Antar Menu (Swipe Kiri/Kanan)
+            - Tema Antarmuka Baru: Putih & Hijau Pastel (White & Pastel Green)
+          files: ./release-apk/ESP32-SmartNotif-v1.0.7.apk
         continue-on-error: true
