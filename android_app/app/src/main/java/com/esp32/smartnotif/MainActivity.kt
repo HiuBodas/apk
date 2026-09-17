@@ -7,7 +7,6 @@ import android.content.IntentFilter
 import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
-import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.DecelerateInterpolator
@@ -16,7 +15,6 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.view.GestureDetectorCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -54,7 +52,6 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
     private lateinit var bleDeviceAdapter: BleDeviceAdapter
 
     private var currentTab = TAB_MENU
-    private lateinit var gestureDetector: GestureDetectorCompat
     private var startTouchX = 0f
     private var startTouchY = 0f
 
@@ -96,7 +93,6 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
 
         setupUI()
         setupListeners()
-        setupSwipeGesture()
         checkAndRequestPermissions()
 
         // Jadwalkan update cuaca berkala setiap 30-45 menit via WorkManager
@@ -460,52 +456,9 @@ class MainActivity : AppCompatActivity(), BleManager.BleStateListener, BleManage
         updateSettingBleDeviceCard()
     }
 
-    private fun setupSwipeGesture() {
-        val density = resources.displayMetrics.density
-        val minDistance = SWIPE_THRESHOLD_DP * density
-        val minVelocity = SWIPE_VELOCITY_THRESHOLD_DP * density
-
-        gestureDetector = GestureDetectorCompat(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onFling(
-                e1: MotionEvent?,
-                e2: MotionEvent?,
-                velocityX: Float,
-                velocityY: Float
-            ): Boolean {
-                if (e1 == null || e2 == null) return false
-
-                val deltaX = e2.x - e1.x
-                val deltaY = e2.y - e1.y
-
-                // Deteksi gesekan dominan horizontal
-                if (Math.abs(deltaX) > Math.abs(deltaY) * 1.25f &&
-                    Math.abs(deltaX) > minDistance &&
-                    Math.abs(velocityX) > minVelocity
-                ) {
-                    if (deltaX < 0) {
-                        // Geser kiri -> Pindah ke Setting
-                        if (currentTab == TAB_MENU) {
-                            switchToSetting(animated = true)
-                            return true
-                        }
-                    } else {
-                        // Geser kanan -> Pindah ke Menu
-                        if (currentTab == TAB_SETTING) {
-                            switchToMenu(animated = true)
-                            return true
-                        }
-                    }
-                }
-                return false
-            }
-        })
-    }
-
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        gestureDetector.onTouchEvent(ev)
-
         val density = resources.displayMetrics.density
-        val dragThreshold = 75 * density
+        val dragThreshold = SWIPE_THRESHOLD_DP * density
 
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
